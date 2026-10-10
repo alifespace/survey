@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答卷管理</title>
+    <link rel="stylesheet" href="/admin.css">
+    <script type="module" src="/admin-submissions.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">Cloudflare 调查</p>
+          <h1 id="page-heading">答卷管理</h1>
+          <p class="subtle">查看和导出所选问卷的答卷。</p>
+        </div>
+        <div class="page-actions">
+          <a class="button-link" href="/admin.html">返回问卷管理</a>
+          <button id="export-button" type="button" disabled>导出 CSV</button>
+        </div>
+      </header>
+
+      <section class="panel" aria-labelledby="list-heading">
+        <div class="section-heading">
+          <h2 id="list-heading">答卷列表</h2>
+          <button id="refresh-button" class="secondary" type="button">刷新</button>
+        </div>
+        <p id="list-status" class="status" role="status" aria-live="polite">正在加载答卷……</p>
+        <div class="table-wrap">
+          <table id="submission-table" hidden>
+            <thead>
+              <tr>
+                <th scope="col">答卷 ID</th>
+                <th scope="col">Email</th>
+                <th scope="col">提交时间</th>
+                <th scope="col">操作</th>
+              </tr>
+            </thead>
+            <tbody id="submission-list"></tbody>
+          </table>
+        </div>
+        <button id="load-more-button" class="secondary" type="button" hidden>加载更多</button>
+      </section>
+
+      <section id="detail-panel" class="panel list-panel" aria-labelledby="detail-heading" hidden>
+        <h2 id="detail-heading">答卷详情</h2>
+        <p id="detail-status" class="status" role="status" aria-live="polite"></p>
+        <dl id="detail-list" class="detail-list"></dl>
+      </section>
+    </main>
+  </body>
+</html>

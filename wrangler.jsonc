@@ -1,0 +1,19 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "cloudflare-survey",
+	"main": "./src/index.js",
+	"compatibility_date": "2026-10-10",
+	"assets": {
+		"directory": "./public",
+		"run_worker_first": [
+			"/api/*"
+		]
+	},
+	"r2_buckets": [
+		{
+			"binding": "SURVEY_BUCKET",
+			"bucket_name": "cloudflare-survey",
+			"remote": false
+		}
+	]
+}

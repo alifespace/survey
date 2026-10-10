@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调查问卷</title>
+    <link rel="stylesheet" href="/customer.css">
+    <script type="module" src="/survey-selection.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel" aria-labelledby="survey-heading">
+        <p class="eyebrow">Cloudflare 调查</p>
+        <h1 id="survey-heading">正在加载问卷……</h1>
+        <p id="selection-status" class="status" role="status" aria-live="polite">正在检查问卷是否可用。</p>
+        <form id="survey-form" hidden novalidate>
+          <p class="respondent">答卷将关联至 <strong id="selected-email"></strong></p>
+          <div id="question-list" class="question-list"></div>
+          <p id="submit-status" class="status" role="status" aria-live="polite"></p>
+          <button id="submit-button" type="submit">提交答卷</button>
+        </form>
+        <div id="success-view" class="success-view" hidden>
+          <h2>提交成功</h2>
+          <p>你的答卷已经保存。</p>
+          <p>答卷 ID：<span id="submission-id" class="code"></span></p>
+        </div>
+        <a class="back-link" href="/">返回重新选择</a>
+      </section>
+    </main>
+  </body>
+</html>
