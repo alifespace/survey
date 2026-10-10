@@ -1,5 +1,6 @@
 import {
   createQuestionnaire,
+  getQuestionnaire,
   listQuestionnaires,
   QuestionnaireRepositoryError,
 } from "./questionnaire-repository.js";
@@ -108,6 +109,45 @@ async function createFromRequest(request, bucket) {
 
   const survey = await createQuestionnaire(bucket, questionnaire);
   return jsonResponse({ survey }, 201);
+}
+
+export async function handleAdminQuestionnaireDetailRequest(
+  request,
+  env,
+  surveyId,
+) {
+  if (request.method !== "GET") {
+    return jsonResponse(
+      { error: "Method not allowed" },
+      405,
+      { Allow: "GET" },
+    );
+  }
+
+  try {
+    const questionnaire = await getQuestionnaire(env.SURVEY_BUCKET, surveyId);
+    if (questionnaire === null) {
+      return jsonResponse({ error: "Questionnaire unavailable" }, 404);
+    }
+    return jsonResponse(
+      {
+        survey: {
+          survey_id: questionnaire.metadata.survey_id,
+          title: questionnaire.metadata.title,
+          questions: questionnaire.questions,
+        },
+      },
+      200,
+    );
+  } catch (error) {
+    if (error instanceof TypeError) {
+      return jsonResponse({ error: "Questionnaire unavailable" }, 404);
+    }
+    if (error instanceof QuestionnaireRepositoryError) {
+      return jsonResponse({ error: "Questionnaire unavailable" }, 500);
+    }
+    throw error;
+  }
 }
 
 export async function handleAdminQuestionnairesRequest(request, env) {

@@ -34,6 +34,9 @@ class FakeR2Bucket {
       async json() {
         return JSON.parse(stored.value);
       },
+      async text() {
+        return stored.value;
+      },
     };
   }
 
@@ -240,4 +243,130 @@ test("rejects invalid uploads and unsupported methods without writes", async () 
   assert.equal(methodResponse.status, 405);
   assert.equal(methodResponse.headers.get("Allow"), "GET, POST");
   assert.equal(bucket.calls.filter(({ method }) => method === "put").length, 0);
+});
+
+async function createManualQuestionnaire(bucket, headers, body = manualBody()) {
+  const response = await worker.fetch(
+    request("/api/admin/questionnaires", {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(response.status, 201);
+  return (await response.json()).survey;
+}
+
+test("rejects unauthenticated questionnaire detail access before touching R2", async () => {
+  const bucket = new FakeR2Bucket();
+  const response = await worker.fetch(
+    request(
+      "/api/admin/questionnaires/123e4567-e89b-42d3-a456-426614174000",
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 401);
+  assert.equal(bucket.calls.length, 0);
+});
+
+test("returns the full questionnaire definition for copying", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const created = await createManualQuestionnaire(bucket, headers);
+
+  const response = await worker.fetch(
+    request(`/api/admin/questionnaires/${created.survey_id}`, { headers }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 200);
+  const { survey } = await response.json();
+  assert.deepEqual(survey, {
+    survey_id: created.survey_id,
+    title: "Manual survey",
+    questions: [
+      {
+        question_id: "q1",
+        type: "single_choice",
+        label: "How was your experience?",
+        required: true,
+        options: ["Great", "Okay", "Poor"],
+      },
+    ],
+  });
+});
+
+test("returns a safe 404 for missing and malformed questionnaire identifiers", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+
+  const missingResponse = await worker.fetch(
+    request(
+      "/api/admin/questionnaires/223e4567-e89b-42d3-a456-426614174000",
+      { headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(missingResponse.status, 404);
+  assert.deepEqual(await missingResponse.json(), {
+    error: "Questionnaire unavailable",
+  });
+
+  const malformedResponse = await worker.fetch(
+    request("/api/admin/questionnaires/not-a-uuid", { headers }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(malformedResponse.status, 404);
+  assert.deepEqual(await malformedResponse.json(), {
+    error: "Questionnaire unavailable",
+  });
+  assert.equal(bucket.calls.filter(({ method }) => method === "put").length, 0);
+});
+
+test("returns a safe error for a corrupt stored questionnaire", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const surveyId = "423e4567-e89b-42d3-a456-426614174000";
+  bucket.objects.set(`v1/surveys/${surveyId}/metadata.json`, {
+    value: JSON.stringify({
+      schema_version: 1,
+      survey_id: surveyId,
+      title: "Broken",
+      source_filename: "Broken.csv",
+      created_at: "2026-10-10T00:00:00.000Z",
+      status: "active",
+    }),
+  });
+  bucket.objects.set(`v1/surveys/${surveyId}/definition.csv`, {
+    value: "invalid,header",
+  });
+
+  const response = await worker.fetch(
+    request(`/api/admin/questionnaires/${surveyId}`, { headers }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), {
+    error: "Questionnaire unavailable",
+  });
+});
+
+test("rejects unsupported methods on the questionnaire detail route", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+
+  const response = await worker.fetch(
+    request(
+      "/api/admin/questionnaires/123e4567-e89b-42d3-a456-426614174000",
+      { method: "DELETE", headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.get("Allow"), "GET");
+  assert.equal(bucket.calls.length, 0);
 });

@@ -2,7 +2,10 @@ import {
   handleAdminSessionRequest,
   requireAdminSession,
 } from "./admin-auth.js";
-import { handleAdminQuestionnairesRequest } from "./admin-questionnaires.js";
+import {
+  handleAdminQuestionnaireDetailRequest,
+  handleAdminQuestionnairesRequest,
+} from "./admin-questionnaires.js";
 import {
   handleAdminSubmissionDetailRequest,
   handleAdminSubmissionExportRequest,
@@ -56,6 +59,17 @@ export default {
 
     if (url.pathname === "/api/admin/questionnaires") {
       return handleAdminQuestionnairesRequest(request, env);
+    }
+
+    const adminQuestionnaireMatch = url.pathname.match(
+      /^\/api\/admin\/questionnaires\/([^/]+)$/u,
+    );
+    if (adminQuestionnaireMatch !== null) {
+      return handleAdminQuestionnaireDetailRequest(
+        request,
+        env,
+        adminQuestionnaireMatch[1],
+      );
     }
 
     const adminExportMatch = url.pathname.match(
