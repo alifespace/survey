@@ -45,6 +45,19 @@ const surveyTable = document.querySelector("#survey-table");
 const surveyList = document.querySelector("#survey-list");
 const listStatus = document.querySelector("#list-status");
 const loadMoreButton = document.querySelector("#load-more-button");
+const detailPanel = document.querySelector("#questionnaire-detail-panel");
+const detailSubtitle = document.querySelector("#questionnaire-detail-subtitle");
+const detailStatus = document.querySelector("#questionnaire-detail-status");
+const detailList = document.querySelector("#questionnaire-detail-list");
+
+const QUESTION_TYPE_NAMES = Object.freeze({
+  text: "单行文本",
+  textarea: "多行文本",
+  email: "Email",
+  number: "数字",
+  single_choice: "单选",
+  multi_choice: "多选",
+});
 
 let listCursor = null;
 let editorMode = "create";
@@ -338,6 +351,24 @@ function addSurveyRows(surveys) {
       actions.append(disabledSubmissions);
     }
 
+    const viewButton = document.createElement("button");
+    viewButton.type = "button";
+    viewButton.className = "secondary compact";
+    viewButton.textContent = "查看";
+    viewButton.addEventListener("click", () => {
+      showQuestionnaireDetail(survey);
+    });
+    actions.append(viewButton);
+
+    const copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.className = "secondary compact";
+    copyButton.textContent = "复制";
+    copyButton.addEventListener("click", () => {
+      startCopy(survey);
+    });
+    actions.append(copyButton);
+
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "secondary compact";
@@ -394,6 +425,64 @@ async function deleteSurvey(survey, button) {
     setStatus(listStatus, error.message, "error");
     button.disabled = false;
   }
+}
+
+async function showQuestionnaireDetail(survey) {
+  detailPanel.hidden = false;
+  detailSubtitle.textContent = `《${survey.title}》`;
+  detailList.replaceChildren();
+  setStatus(detailStatus, "正在加载问卷详情……");
+  try {
+    const response = await fetch(
+      `/api/admin/questionnaires/${encodeURIComponent(survey.survey_id)}`,
+    );
+    if (response.status === 401) {
+      setAuthenticated(false);
+      setStatus(
+        loginStatus,
+        "登录状态不可用或已过期。本地开发请使用 HTTPS，然后重新登录。",
+        "error",
+      );
+      return;
+    }
+    if (response.status === 404) {
+      setStatus(detailStatus, "问卷不存在或不可读取。", "error");
+      return;
+    }
+    if (!response.ok) {
+      throw new Error(await responseError(response));
+    }
+    const result = await response.json();
+    for (const [index, question] of result.survey.questions.entries()) {
+      const item = document.createElement("li");
+      const label = document.createElement("p");
+      label.className = "questionnaire-detail-label";
+      label.textContent = `${index + 1}. ${question.label}`;
+      const meta = document.createElement("p");
+      meta.className = "questionnaire-detail-meta";
+      const typeName = QUESTION_TYPE_NAMES[question.type] ?? question.type;
+      const requiredText = question.required ? "（必填）" : "";
+      const optionsText = question.options.length > 0
+        ? `　选项：${question.options.join("、")}`
+        : "";
+      meta.textContent = `${typeName}${requiredText}${optionsText}`;
+      item.append(label, meta);
+      detailList.append(item);
+    }
+    setStatus(detailStatus, "");
+    detailPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    setStatus(detailStatus, error.message, "error");
+  }
+}
+
+function startCopy(survey) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("copy", survey.survey_id);
+  window.history.replaceState(null, "", url);
+  enterCopyMode(survey.survey_id).then(() => {
+    editorForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 async function loadSurveys({ append = false } = {}) {
@@ -541,6 +630,11 @@ editorForm.addEventListener("submit", async (event) => {
 cancelButton.addEventListener("click", () => {
   resetToCreateMode();
   setStatus(editorStatus, "已取消复制，已返回新建问卷。");
+});
+
+document.querySelector("#close-detail-button").addEventListener("click", () => {
+  detailPanel.hidden = true;
+  detailList.replaceChildren();
 });
 
 document.querySelector("#refresh-button").addEventListener("click", () => loadSurveys());

@@ -29,25 +29,6 @@ textarea {
   padding: 7vh 0 3rem;
 }
 
-.home-shell {
-  display: grid;
-  grid-template-columns: minmax(28rem, 0.82fr) minmax(32rem, 1.18fr);
-  min-height: 100vh;
-}
-
-.home-primary {
-  display: flex;
-  align-items: center;
-  border-right: 1px solid var(--border-default);
-  padding: clamp(3.5rem, 5vw, 5rem) clamp(2rem, 5vw, 5rem);
-  background: var(--page-background);
-}
-
-.home-primary-inner {
-  width: min(100%, 34rem);
-  margin: 0 auto;
-}
-
 .home-page .intro h1 {
   font-size: clamp(2.25rem, 3.6vw, 3.35rem);
   letter-spacing: -0.035em;
@@ -58,59 +39,6 @@ textarea {
   border-radius: 0.85rem;
   padding: 1.5rem;
   box-shadow: 0 12px 34px var(--shadow);
-}
-
-.home-aside {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: clamp(4rem, 9vw, 9rem);
-  background: var(--surface-background);
-}
-
-.home-aside-content {
-  position: relative;
-  width: min(100%, 44rem);
-}
-
-.home-aside-mark {
-  position: absolute;
-  top: -4rem;
-  left: -2.2rem;
-  color: var(--border-default);
-  font-family: Georgia, serif;
-  font-size: clamp(7rem, 12vw, 11rem);
-  font-weight: 700;
-  line-height: 1;
-  user-select: none;
-}
-
-.home-aside-kicker {
-  position: relative;
-  margin-bottom: 1.15rem;
-  color: var(--primary);
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.home-aside h2 {
-  position: relative;
-  max-width: 18ch;
-  margin-bottom: 1.25rem;
-  font-size: clamp(2rem, 4vw, 3.75rem);
-  font-weight: 650;
-  letter-spacing: -0.035em;
-  line-height: 1.12;
-}
-
-.home-aside-content > p:last-child {
-  position: relative;
-  max-width: 36rem;
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  line-height: 1.75;
 }
 
 .intro {
@@ -178,6 +106,7 @@ input[type="email"] {
 input[type="text"],
 input[type="email"],
 input[type="number"],
+select,
 textarea {
   width: 100%;
   border: 1px solid var(--border-strong);
@@ -192,8 +121,8 @@ textarea {
 }
 
 input:focus,
-button:focus-visible,
-.survey-option:has(input:focus-visible) {
+select:focus,
+button:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -207,36 +136,6 @@ fieldset {
 
 legend {
   margin-bottom: 0.7rem;
-}
-
-.survey-list {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.survey-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  border: 1px solid var(--border-default);
-  border-radius: 0.7rem;
-  padding: 0.9rem;
-  cursor: pointer;
-}
-
-.survey-option:hover,
-.survey-option:has(input:checked) {
-  border-color: var(--primary);
-  background: var(--surface-selected);
-}
-
-.survey-option input {
-  margin-top: 0.2rem;
-  accent-color: var(--primary);
-}
-
-.survey-title {
-  overflow-wrap: anywhere;
 }
 
 button {
@@ -388,35 +287,7 @@ button.secondary {
   display: none !important;
 }
 
-@media (max-width: 900px) {
-  .home-shell {
-    display: block;
-    min-height: auto;
-  }
-
-  .home-primary {
-    min-height: calc(100vh - 4.5rem);
-    border-right: 0;
-    padding: clamp(2.5rem, 8vw, 5rem) max(1rem, calc((100vw - 42rem) / 2));
-  }
-
-  .home-primary-inner {
-    width: 100%;
-  }
-
-  .home-aside {
-    display: none;
-  }
-}
-
 @media (max-width: 560px) {
-  .home-primary {
-    align-items: flex-start;
-    min-height: auto;
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-  }
-
   .home-page .intro h1 {
     font-size: clamp(2rem, 11vw, 2.8rem);
   }

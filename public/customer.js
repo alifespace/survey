@@ -8,7 +8,7 @@ const entryForm = document.querySelector("#entry-form");
 const emailInput = document.querySelector("#email");
 const emailError = document.querySelector("#email-error");
 const surveyFieldset = document.querySelector("#survey-fieldset");
-const surveyList = document.querySelector("#survey-list");
+const surveySelect = document.querySelector("#survey-select");
 const listStatus = document.querySelector("#list-status");
 const retryButton = document.querySelector("#retry-button");
 const continueButton = document.querySelector("#continue-button");
@@ -16,7 +16,7 @@ const continueButton = document.querySelector("#continue-button");
 let availableSurveys = new Map();
 
 function selectedSurveyId() {
-  return entryForm.querySelector('input[name="survey_id"]:checked')?.value ?? null;
+  return surveySelect.value === "" ? null : surveySelect.value;
 }
 
 function updateContinueButton() {
@@ -24,21 +24,14 @@ function updateContinueButton() {
 }
 
 function renderSurveys(surveys) {
-  surveyList.replaceChildren();
+  surveySelect.replaceChildren();
   availableSurveys = new Map(surveys.map((survey) => [survey.survey_id, survey]));
 
   for (const survey of surveys) {
-    const label = document.createElement("label");
-    const radio = document.createElement("input");
-    const title = document.createElement("span");
-    label.className = "survey-option";
-    radio.type = "radio";
-    radio.name = "survey_id";
-    radio.value = survey.survey_id;
-    title.className = "survey-title";
-    title.textContent = survey.title;
-    label.append(radio, title);
-    surveyList.append(label);
+    const option = document.createElement("option");
+    option.value = survey.survey_id;
+    option.textContent = survey.title;
+    surveySelect.append(option);
   }
 }
 
@@ -62,7 +55,7 @@ async function refreshSurveys() {
     updateContinueButton();
   } catch {
     availableSurveys = new Map();
-    surveyList.replaceChildren();
+    surveySelect.replaceChildren();
     listStatus.className = "status error";
     listStatus.textContent = "暂时无法加载问卷，请稍后重试。";
     retryButton.hidden = false;
@@ -82,7 +75,7 @@ emailInput.addEventListener("blur", () => {
   updateContinueButton();
 });
 
-surveyList.addEventListener("change", updateContinueButton);
+surveySelect.addEventListener("change", updateContinueButton);
 retryButton.addEventListener("click", refreshSurveys);
 
 entryForm.addEventListener("submit", (event) => {

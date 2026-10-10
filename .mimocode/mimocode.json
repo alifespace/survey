@@ -1,0 +1,9 @@
+{
+	"$schema": "https://mimo.xiaomi.com/mimocode/config.json",
+	"permission": {
+		"bash": {
+			"rm -rf .playwright-cli": "allow",
+			"rm -rf .playwright-cli/": "allow"
+		}
+	}
+}

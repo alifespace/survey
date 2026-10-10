@@ -89,3 +89,13 @@ test("the submission list provides a confirmed delete action per row", () => {
   assert.ok(submissionsJs.includes("window.confirm"));
   assert.match(submissionsJs, /method: "DELETE"/u);
 });
+
+test("each questionnaire row offers view, copy, submissions, and delete actions", () => {
+  assert.ok(html.includes('id="questionnaire-detail-panel"'));
+  assert.ok(html.includes('id="close-detail-button"'));
+  assert.ok(js.includes("showQuestionnaireDetail"));
+  assert.ok(js.includes("startCopy"));
+  assert.ok(js.includes('"查看"'));
+  assert.ok(js.includes('"复制"'));
+  assert.match(js, /searchParams\.set\("copy"/u);
+});

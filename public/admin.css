@@ -84,6 +84,37 @@ button.compact {
   padding: 3rem 0;
 }
 
+.login-panel h1 {
+  margin-bottom: 1rem;
+}
+
+.questionnaire-detail-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.questionnaire-detail-list li {
+  margin-bottom: 0.9rem;
+}
+
+.questionnaire-detail-label {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+.questionnaire-detail-meta {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--text-secondary);
+}
+
 .panel {
   border: 1px solid var(--border-default);
   border-radius: 0.85rem;
