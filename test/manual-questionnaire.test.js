@@ -15,14 +15,12 @@ function validInput() {
     title: "Customer feedback",
     questions: [
       {
-        question_id: "name",
         type: "text",
         label: "Your name",
         required: true,
         options: [],
       },
       {
-        question_id: "rating",
         type: "single_choice",
         label: "Choose a rating, then explain \"why\".\nOptional context is welcome.",
         required: false,
@@ -37,18 +35,23 @@ test("serializes a manual questionnaire into validated canonical CSV", () => {
 
   assert.equal(result.sourceFilename, "Customer feedback.csv");
   assert.match(result.csv, /^question_id,type,label,required,options\n/u);
-  assert.match(result.csv, /"Choose a rating, then explain ""why""\.\nOptional context is welcome\."/u);
+  assert.match(result.csv, /^q1,text,Your name,true,$/mu);
+  assert.match(
+    result.csv,
+    /"Choose a rating, then explain ""why""\.\nOptional context is welcome\."/u,
+  );
   assert.deepEqual(parseQuestionnaireCsv(result.csv), {
+    questionIdsGenerated: false,
     questions: [
       {
-        question_id: "name",
+        question_id: "q1",
         type: "text",
         label: "Your name",
         required: true,
         options: [],
       },
       {
-        question_id: "rating",
+        question_id: "q2",
         type: "single_choice",
         label: "Choose a rating, then explain \"why\".\nOptional context is welcome.",
         required: false,
@@ -56,6 +59,20 @@ test("serializes a manual questionnaire into validated canonical CSV", () => {
       },
     ],
   });
+});
+
+test("ignores any question_id sent by the client", () => {
+  const input = validInput();
+  input.questions[0].question_id = "invalid id";
+  input.questions[1].question_id = "name";
+
+  const result = serializeManualQuestionnaire(input);
+  assert.deepEqual(
+    parseQuestionnaireCsv(result.csv).questions.map(
+      (question) => question.question_id,
+    ),
+    ["q1", "q2"],
+  );
 });
 
 const invalidTitles = [
@@ -109,20 +126,6 @@ const invalidQuestions = [
       input.questions = [];
     },
     code: "NO_QUESTIONS",
-  },
-  {
-    description: "duplicate question IDs",
-    change(input) {
-      input.questions[1].question_id = "name";
-    },
-    code: "DUPLICATE_QUESTION_ID",
-  },
-  {
-    description: "invalid question ID",
-    change(input) {
-      input.questions[0].question_id = "invalid id";
-    },
-    code: "INVALID_QUESTION_ID",
   },
   {
     description: "unsupported type",

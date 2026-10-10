@@ -3,7 +3,10 @@ import {
   surveyListPrefix,
   surveyMetadataKey,
 } from "./object-keys.js";
-import { parseQuestionnaireCsv } from "./questionnaire-csv.js";
+import {
+  parseQuestionnaireCsv,
+  serializeQuestionnaireCsv,
+} from "./questionnaire-csv.js";
 
 export const QUESTIONNAIRE_REPOSITORY_LIMITS = Object.freeze({
   maxSourceFilenameCharacters: 255,
@@ -135,7 +138,10 @@ export async function createQuestionnaire(
   dependencies = {},
 ) {
   validateBucket(bucket);
-  parseQuestionnaireCsv(csv);
+  const parsed = parseQuestionnaireCsv(csv);
+  const definitionCsv = parsed.questionIdsGenerated
+    ? serializeQuestionnaireCsv(parsed.questions)
+    : csv;
   const title = questionnaireTitle(sourceFilename);
 
   const generateId = dependencies.generateId ?? (() => crypto.randomUUID());
@@ -166,7 +172,7 @@ export async function createQuestionnaire(
     status: "active",
   };
 
-  await putNewObject(bucket, definitionKey, csv, {
+  await putNewObject(bucket, definitionKey, definitionCsv, {
     contentType: "text/csv; charset=utf-8",
   });
   await putNewObject(bucket, metadataKey, JSON.stringify(metadata), {

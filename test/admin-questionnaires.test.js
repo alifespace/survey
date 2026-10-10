@@ -77,7 +77,6 @@ function manualBody() {
     title: "Manual survey",
     questions: [
       {
-        question_id: "experience",
         type: "single_choice",
         label: "How was your experience?",
         required: true,
@@ -118,9 +117,10 @@ test("creates a manual questionnaire as canonical CSV and lists its metadata", a
   const definitionKey = `v1/surveys/${survey.survey_id}/definition.csv`;
   const storedCsv = bucket.objects.get(definitionKey).value;
   assert.deepEqual(parseQuestionnaireCsv(storedCsv), {
+    questionIdsGenerated: false,
     questions: [
       {
-        question_id: "experience",
+        question_id: "q1",
         type: "single_choice",
         label: "How was your experience?",
         required: true,

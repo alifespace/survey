@@ -1,4 +1,7 @@
-import { parseQuestionnaireCsv } from "./questionnaire-csv.js";
+import {
+  parseQuestionnaireCsv,
+  serializeQuestionnaireCsv,
+} from "./questionnaire-csv.js";
 
 export const MANUAL_QUESTIONNAIRE_LIMITS = Object.freeze({
   maxTitleCharacters: 251,
@@ -32,14 +35,7 @@ function validateTitle(title) {
   return title;
 }
 
-function csvCell(value) {
-  if (/[",\r\n]/u.test(value)) {
-    return `"${value.replaceAll('"', '""')}"`;
-  }
-  return value;
-}
-
-function questionRow(question, index) {
+function normalizeQuestion(question, index) {
   if (question === null || typeof question !== "object" || Array.isArray(question)) {
     throw new ManualQuestionnaireError(
       "INVALID_QUESTION",
@@ -47,9 +43,8 @@ function questionRow(question, index) {
     );
   }
 
-  const { question_id: questionId, type, label, required, options } = question;
+  const { type, label, required, options } = question;
   if (
-    typeof questionId !== "string" ||
     typeof type !== "string" ||
     typeof label !== "string" ||
     typeof required !== "boolean" ||
@@ -69,15 +64,8 @@ function questionRow(question, index) {
     );
   }
 
-  return [
-    questionId,
-    type,
-    label,
-    required ? "true" : "false",
-    options.join("|"),
-  ]
-    .map(csvCell)
-    .join(",");
+  // question_id is never taken from the client; the server always generates it.
+  return { question_id: "", type, label, required, options };
 }
 
 export function serializeManualQuestionnaire(input) {
@@ -96,15 +84,11 @@ export function serializeManualQuestionnaire(input) {
     );
   }
 
-  const csv = [
-    "question_id,type,label,required,options",
-    ...input.questions.map(questionRow),
-  ].join("\n");
-
-  parseQuestionnaireCsv(csv);
+  const normalized = input.questions.map(normalizeQuestion);
+  const parsed = parseQuestionnaireCsv(serializeQuestionnaireCsv(normalized));
 
   return {
-    csv,
+    csv: serializeQuestionnaireCsv(parsed.questions),
     sourceFilename: `${title}.csv`,
   };
 }

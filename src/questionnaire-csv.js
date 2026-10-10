@@ -208,25 +208,29 @@ function validateQuestion(row, seenQuestionIds) {
 
   const [questionId, type, label, required, optionsValue] = row.cells;
 
-  if (
-    !QUESTION_ID_PATTERN.test(questionId) ||
-    characterCount(questionId) > QUESTIONNAIRE_LIMITS.maxQuestionIdCharacters
-  ) {
-    throw new QuestionnaireCsvError(
-      "INVALID_QUESTION_ID",
-      `question_id must contain 1-${QUESTIONNAIRE_LIMITS.maxQuestionIdCharacters} ASCII letters, numbers, underscores, or hyphens`,
-      row.line,
-    );
-  }
+  // Blank question_id cells are valid here; the server fills them in
+  // with generated IDs after the whole file validates.
+  if (questionId !== "") {
+    if (
+      !QUESTION_ID_PATTERN.test(questionId) ||
+      characterCount(questionId) > QUESTIONNAIRE_LIMITS.maxQuestionIdCharacters
+    ) {
+      throw new QuestionnaireCsvError(
+        "INVALID_QUESTION_ID",
+        `question_id must contain 1-${QUESTIONNAIRE_LIMITS.maxQuestionIdCharacters} ASCII letters, numbers, underscores, or hyphens`,
+        row.line,
+      );
+    }
 
-  if (seenQuestionIds.has(questionId)) {
-    throw new QuestionnaireCsvError(
-      "DUPLICATE_QUESTION_ID",
-      `Duplicate question_id: ${questionId}`,
-      row.line,
-    );
+    if (seenQuestionIds.has(questionId)) {
+      throw new QuestionnaireCsvError(
+        "DUPLICATE_QUESTION_ID",
+        `Duplicate question_id: ${questionId}`,
+        row.line,
+      );
+    }
+    seenQuestionIds.add(questionId);
   }
-  seenQuestionIds.add(questionId);
 
   if (!QUESTION_TYPES.has(type)) {
     throw new QuestionnaireCsvError(
@@ -355,9 +359,53 @@ export function parseQuestionnaireCsv(input) {
   }
 
   const seenQuestionIds = new Set();
-  return {
-    questions: questionRows.map((row) =>
-      validateQuestion(row, seenQuestionIds),
+  const questions = questionRows.map((row) =>
+    validateQuestion(row, seenQuestionIds),
+  );
+
+  let questionIdsGenerated = false;
+  questions.forEach((question, index) => {
+    if (question.question_id === "") {
+      question.question_id = generateQuestionId(index + 1, seenQuestionIds);
+      seenQuestionIds.add(question.question_id);
+      questionIdsGenerated = true;
+    }
+  });
+
+  return { questions, questionIdsGenerated };
+}
+
+function generateQuestionId(position, takenQuestionIds) {
+  const base = `q${position}`;
+  let candidate = base;
+  let suffix = 2;
+  while (takenQuestionIds.has(candidate)) {
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
+function csvCell(value) {
+  if (/[",\r\n]/u.test(value)) {
+    return `"${value.replaceAll('"', '""')}"`;
+  }
+  return value;
+}
+
+export function serializeQuestionnaireCsv(questions) {
+  return [
+    HEADERS.join(","),
+    ...questions.map((question) =>
+      [
+        question.question_id,
+        question.type,
+        question.label,
+        question.required ? "true" : "false",
+        question.options.join("|"),
+      ]
+        .map(csvCell)
+        .join(","),
     ),
-  };
+  ].join("\n");
 }

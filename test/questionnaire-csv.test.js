@@ -31,6 +31,7 @@ test("parses every supported question type in row order", () => {
   ].join("\n");
 
   assert.deepEqual(parseQuestionnaireCsv(csv), {
+    questionIdsGenerated: false,
     questions: [
       {
         question_id: "name",
@@ -124,7 +125,6 @@ test("rejects an invalid column count", () => {
 });
 
 const invalidQuestionIds = [
-  ["empty", ""],
   ["space", "question id"],
   ["slash", "question/id"],
   ["too long", "a".repeat(QUESTIONNAIRE_LIMITS.maxQuestionIdCharacters + 1)],
@@ -139,6 +139,64 @@ for (const [description, questionId] of invalidQuestionIds) {
     );
   });
 }
+
+test("generates stable positional IDs for blank question_id cells", () => {
+  const csv = [
+    header,
+    ",text,Name,true,",
+    ",textarea,Bio,false,",
+    ",number,Age,false,",
+  ].join("\n");
+
+  assert.deepEqual(parseQuestionnaireCsv(csv), {
+    questionIdsGenerated: true,
+    questions: [
+      {
+        question_id: "q1",
+        type: "text",
+        label: "Name",
+        required: true,
+        options: [],
+      },
+      {
+        question_id: "q2",
+        type: "textarea",
+        label: "Bio",
+        required: false,
+        options: [],
+      },
+      {
+        question_id: "q3",
+        type: "number",
+        label: "Age",
+        required: false,
+        options: [],
+      },
+    ],
+  });
+});
+
+test("mixes existing and generated IDs while avoiding collisions", () => {
+  const csv = [
+    header,
+    ",text,First,true,",
+    "q1,text,Uses the natural generated ID,false,",
+    ",text,Third,false,",
+    "q1-2,text,Blocks the suffixed candidate,false,",
+  ].join("\n");
+
+  const result = parseQuestionnaireCsv(csv);
+  assert.equal(result.questionIdsGenerated, true);
+  assert.deepEqual(
+    result.questions.map((question) => question.question_id),
+    ["q1-3", "q1", "q3", "q1-2"],
+  );
+});
+
+test("generates the same IDs for the same input", () => {
+  const csv = [header, ",text,A,true,", ",text,B,false,"].join("\n");
+  assert.deepEqual(parseQuestionnaireCsv(csv), parseQuestionnaireCsv(csv));
+});
 
 test("rejects a duplicate question_id", () => {
   expectCsvError(

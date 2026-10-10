@@ -152,6 +152,33 @@ test("stores a validated questionnaire definition and metadata", async () => {
   });
 });
 
+test("stores generated question IDs in the canonical definition CSV", async () => {
+  const bucket = new FakeR2Bucket();
+  const blankIdCsv = [
+    "question_id,type,label,required,options",
+    "name,text,Name,true,",
+    ",text,Nickname,false,",
+  ].join("\n");
+
+  await createQuestionnaire(
+    bucket,
+    { csv: blankIdCsv, sourceFilename: "Generated Survey.csv" },
+    dependencies(),
+  );
+
+  const stored = bucket.objects.get(
+    `v1/surveys/${surveyIds[0]}/definition.csv`,
+  ).value;
+  assert.equal(
+    stored,
+    [
+      "question_id,type,label,required,options",
+      "name,text,Name,true,",
+      "q2,text,Nickname,false,",
+    ].join("\n"),
+  );
+});
+
 test("writes nothing when questionnaire CSV validation fails", async () => {
   const bucket = new FakeR2Bucket();
 
