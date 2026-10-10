@@ -1,0 +1,90 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - generic [ref=f2e3]: 主题
+    - combobox "主题" [ref=f2e4]:
+      - option "跟随系统" [selected]
+      - option "浅色"
+      - option "深色"
+  - main [ref=f2e5]:
+    - generic [ref=f2e6]:
+      - generic [ref=f2e7]:
+        - generic [ref=f2e8]:
+          - paragraph [ref=f2e9]: Cloudflare 调查
+          - heading "问卷管理" [level=1] [ref=f2e10]
+          - paragraph [ref=f2e11]: 上传 CSV 文件或手工创建新问卷。
+        - button "退出登录" [ref=f2e12] [cursor=pointer]
+      - generic [ref=f2e13]:
+        - region [ref=f2e14]:
+          - heading "上传 CSV" [level=2] [ref=f2e15]
+          - generic [ref=f2e16]:
+            - generic [ref=f2e17]: 问卷 CSV 文件
+            - button "问卷 CSV 文件" [ref=f2e18]
+            - paragraph [ref=f2e19]: 文件最大为 256 KiB，文件名将作为问卷标题。
+            - button "上传问卷" [ref=f2e20] [cursor=pointer]
+          - status [ref=f2e21]
+        - region [ref=f2e92]:
+          - generic [ref=f2e23]:
+            - generic [ref=f2e24]:
+              - heading "创建问卷" [level=2] [ref=f2e93]
+              - paragraph [ref=f2e26]: 按显示顺序添加题目，题目 ID 由系统自动生成。每份问卷最多 200 道题。
+            - button "添加题目" [ref=f2e28] [cursor=pointer]
+          - generic [ref=f2e29]:
+            - generic [ref=f2e30]: 问卷标题
+            - textbox "问卷标题" [ref=f2e31]
+            - group "题目 1" [ref=f2e94]:
+              - generic [ref=f2e96]:
+                - button "上移题目" [disabled] [ref=f2e97]: 上移
+                - button "下移题目" [disabled] [ref=f2e98]: 下移
+                - button "删除" [disabled] [ref=f2e99]
+              - generic [ref=f2e100]:
+                - generic [ref=f2e101]:
+                  - text: 题型
+                  - combobox "题型" [ref=f2e102]:
+                    - option "单行文本" [selected]
+                    - option "多行文本"
+                    - option "Email"
+                    - option "数字"
+                    - option "单选"
+                    - option "多选"
+                - generic [ref=f2e103]:
+                  - text: 题目文字
+                  - textbox "题目文字" [ref=f2e104]
+                - generic [ref=f2e105]:
+                  - checkbox "必填" [ref=f2e106]
+                  - text: 必填
+            - button "创建问卷" [ref=f2e107] [cursor=pointer]
+          - status [ref=f2e47]: 副本已保存为新的独立问卷。
+      - region [ref=f2e48]:
+        - generic [ref=f2e49]:
+          - heading "已保存的问卷" [level=2] [ref=f2e50]
+          - button "刷新" [ref=f2e51] [cursor=pointer]
+        - status [ref=f2e52]: 已加载 3 份问卷。
+        - table [ref=f2e72]:
+          - rowgroup [ref=f2e73]:
+            - row [ref=f2e74]:
+              - columnheader "标题" [ref=f2e75]
+              - columnheader "问卷 ID" [ref=f2e76]
+              - columnheader "创建时间" [ref=f2e77]
+              - columnheader "操作" [ref=f2e78]
+          - rowgroup [ref=f2e79]:
+            - row [ref=f2e108]:
+              - cell "UI Smoke Copy" [ref=f2e109]
+              - cell "1d26df7d-cf77-4f32-a5cb-374181e3715f" [ref=f2e110]
+              - cell "2026/10/10 19:09:21" [ref=f2e111]
+              - cell [ref=f2e112]:
+                - link "查看答卷" [ref=f2e113] [cursor=pointer]:
+                  - /url: /admin-submissions.html?survey_id=1d26df7d-cf77-4f32-a5cb-374181e3715f
+            - row [ref=f2e114]:
+              - cell "question1" [ref=f2e115]
+              - cell "4152b602-adbc-403f-b0ca-c8bd39801bec" [ref=f2e116]
+              - cell "2026/10/10 09:27:33" [ref=f2e117]
+              - cell [ref=f2e118]:
+                - link "查看答卷" [ref=f2e119] [cursor=pointer]:
+                  - /url: /admin-submissions.html?survey_id=4152b602-adbc-403f-b0ca-c8bd39801bec
+            - row [ref=f2e120]:
+              - cell "UI Smoke Survey" [ref=f2e121]
+              - cell "ef0d8879-5ae4-47d4-9eca-1551cfb1702a" [ref=f2e122]
+              - cell "2026/10/10 19:07:08" [ref=f2e123]
+              - cell [ref=f2e124]:
+                - link "查看答卷" [ref=f2e125] [cursor=pointer]:
+                  - /url: /admin-submissions.html?survey_id=ef0d8879-5ae4-47d4-9eca-1551cfb1702a

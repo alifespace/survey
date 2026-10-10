@@ -1,0 +1,61 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - generic [ref=f3e3]: 主题
+    - combobox "主题" [ref=f3e4]:
+      - option "跟随系统" [selected]
+      - option "浅色"
+      - option "深色"
+  - main [ref=f3e5]:
+    - generic [ref=f3e6]:
+      - generic [ref=f3e7]:
+        - generic [ref=f3e8]:
+          - paragraph [ref=f3e9]: Cloudflare 调查
+          - heading "问卷管理" [level=1] [ref=f3e10]
+          - paragraph [ref=f3e11]: 上传 CSV 文件或手工创建新问卷。
+        - button "退出登录" [ref=f3e12] [cursor=pointer]
+      - generic [ref=f3e13]:
+        - region [ref=f3e14]:
+          - heading "上传 CSV" [level=2] [ref=f3e15]
+          - generic [ref=f3e16]:
+            - generic [ref=f3e17]: 问卷 CSV 文件
+            - button "问卷 CSV 文件" [ref=f3e18]
+            - paragraph [ref=f3e19]: 文件最大为 256 KiB，文件名将作为问卷标题。
+            - button "上传问卷" [ref=f3e20] [cursor=pointer]
+          - status [ref=f3e21]
+        - region [ref=f3e22]:
+          - generic [ref=f3e23]:
+            - generic [ref=f3e24]:
+              - heading "创建问卷" [level=2] [ref=f3e25]
+              - paragraph [ref=f3e26]: 按显示顺序添加题目，题目 ID 由系统自动生成。每份问卷最多 200 道题。
+            - button "添加题目" [ref=f3e28] [cursor=pointer]
+          - generic [ref=f3e29]:
+            - generic [ref=f3e30]: 问卷标题
+            - textbox "问卷标题" [ref=f3e31]
+            - group "题目 1" [ref=f3e33]:
+              - generic [ref=f3e35]:
+                - button "上移题目" [disabled] [ref=f3e36]: 上移
+                - button "下移题目" [disabled] [ref=f3e37]: 下移
+                - button "删除" [disabled] [ref=f3e38]
+              - generic [ref=f3e39]:
+                - generic [ref=f3e40]:
+                  - text: 题型
+                  - combobox "题型" [ref=f3e41]:
+                    - option "单行文本" [selected]
+                    - option "多行文本"
+                    - option "Email"
+                    - option "数字"
+                    - option "单选"
+                    - option "多选"
+                - generic [ref=f3e42]:
+                  - text: 题目文字
+                  - textbox "题目文字" [ref=f3e43]
+                - generic [ref=f3e44]:
+                  - checkbox "必填" [ref=f3e45]
+                  - text: 必填
+            - button "创建问卷" [ref=f3e46] [cursor=pointer]
+          - status [ref=f3e47]
+      - region [ref=f3e48]:
+        - generic [ref=f3e49]:
+          - heading "已保存的问卷" [level=2] [ref=f3e50]
+          - button "刷新" [ref=f3e51] [cursor=pointer]
+        - status [ref=f3e52]: 正在加载问卷……

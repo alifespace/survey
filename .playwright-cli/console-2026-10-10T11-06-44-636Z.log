@@ -1,0 +1,3 @@
+[     373ms] [VERBOSE] [DOM] Password forms should have (optionally hidden) username fields for accessibility: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8789/admin:0
+[     388ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:8789/api/admin/session:0
+[     417ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8789/favicon.ico:0

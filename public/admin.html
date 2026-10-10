@@ -53,21 +53,25 @@
             <p id="upload-status" class="status" role="status" aria-live="polite"></p>
           </section>
 
-          <section class="panel manual-panel" aria-labelledby="manual-heading">
+          <section class="panel editor-panel" aria-labelledby="editor-heading">
             <div class="section-heading">
               <div>
-                <h2 id="manual-heading">手工创建</h2>
-                <p class="hint">按显示顺序添加题目，每份问卷最多 200 道题。</p>
+                <h2 id="editor-heading">创建问卷</h2>
+                <p class="hint">按显示顺序添加题目，题目 ID 由系统自动生成。每份问卷最多 200 道题。</p>
               </div>
-              <button id="add-question-button" class="secondary" type="button">添加题目</button>
+              <div class="section-actions">
+                <button id="cancel-editor-button" class="secondary" type="button" hidden>取消</button>
+                <button id="add-question-button" class="secondary" type="button">添加题目</button>
+              </div>
             </div>
-            <form id="manual-form">
+            <p id="editor-mode-banner" class="mode-banner" role="status" hidden></p>
+            <form id="editor-form">
               <label for="survey-title">问卷标题</label>
               <input id="survey-title" name="title" maxlength="251" required>
               <div id="questions" class="questions"></div>
-              <button type="submit">创建问卷</button>
+              <button id="save-button" type="submit">创建问卷</button>
             </form>
-            <p id="manual-status" class="status" role="status" aria-live="polite"></p>
+            <p id="editor-status" class="status" role="status" aria-live="polite"></p>
           </section>
         </div>
 
@@ -104,10 +108,6 @@
           <button class="remove danger compact" type="button">删除</button>
         </div>
         <div class="question-grid">
-          <label>
-            题目 ID
-            <input class="question-id" maxlength="64" pattern="[A-Za-z0-9_-]+" required>
-          </label>
           <label>
             题型
             <select class="question-type" required>

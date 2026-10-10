@@ -105,6 +105,24 @@ button.compact {
   gap: 1rem;
 }
 
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mode-banner {
+  margin: 0.85rem 0 0;
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--primary);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  color: var(--text-secondary);
+  background: var(--surface-subtle);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .page-header {
   margin-bottom: 1.5rem;
 }

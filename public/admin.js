@@ -32,8 +32,13 @@ const loginForm = document.querySelector("#login-form");
 const loginStatus = document.querySelector("#login-status");
 const uploadForm = document.querySelector("#upload-form");
 const uploadStatus = document.querySelector("#upload-status");
-const manualForm = document.querySelector("#manual-form");
-const manualStatus = document.querySelector("#manual-status");
+const editorForm = document.querySelector("#editor-form");
+const editorStatus = document.querySelector("#editor-status");
+const editorHeading = document.querySelector("#editor-heading");
+const editorModeBanner = document.querySelector("#editor-mode-banner");
+const saveButton = document.querySelector("#save-button");
+const cancelButton = document.querySelector("#cancel-editor-button");
+const titleInput = document.querySelector("#survey-title");
 const questions = document.querySelector("#questions");
 const questionTemplate = document.querySelector("#question-template");
 const surveyTable = document.querySelector("#survey-table");
@@ -42,6 +47,7 @@ const listStatus = document.querySelector("#list-status");
 const loadMoreButton = document.querySelector("#load-more-button");
 
 let listCursor = null;
+let editorMode = "create";
 
 function setStatus(element, message, kind = "") {
   element.textContent = message;
@@ -103,9 +109,9 @@ function updateOptions(card) {
   }
 }
 
-function addQuestion() {
+function addQuestion(question = null) {
   if (questions.children.length >= MAX_QUESTIONS) {
-    setStatus(manualStatus, `每份问卷最多包含 ${MAX_QUESTIONS} 道题。`, "error");
+    setStatus(editorStatus, `每份问卷最多包含 ${MAX_QUESTIONS} 道题。`, "error");
     return;
   }
 
@@ -129,19 +135,28 @@ function addQuestion() {
     card.remove();
     updateQuestionControls();
   });
+
+  if (question !== null) {
+    card.querySelector(".question-type").value = question.type;
+    card.querySelector(".question-label").value = question.label;
+    card.querySelector(".question-required").checked = question.required;
+  }
+
   questions.append(card);
   updateOptions(card);
+  if (question !== null && CHOICE_TYPES.has(question.type)) {
+    card.querySelector(".question-options").value = question.options.join("|");
+  }
   updateQuestionControls();
 }
 
-function manualPayload() {
+function editorPayload() {
   return {
-    title: document.querySelector("#survey-title").value,
+    title: titleInput.value,
     questions: [...questions.querySelectorAll(".question-card")].map((card) => {
       const type = card.querySelector(".question-type").value;
       const optionsValue = card.querySelector(".question-options").value;
       return {
-        question_id: card.querySelector(".question-id").value,
         type,
         label: card.querySelector(".question-label").value,
         required: card.querySelector(".question-required").checked,
@@ -151,6 +166,139 @@ function manualPayload() {
       };
     }),
   };
+}
+
+function characterCount(value) {
+  return Array.from(value).length;
+}
+
+function validateEditor() {
+  const title = titleInput.value;
+  if (title.trim() === "") {
+    return "请填写问卷标题。";
+  }
+  if (characterCount(title) > 251) {
+    return "问卷标题不能超过 251 个字符。";
+  }
+  if (/[/\\\0-\x1F\x7F]/u.test(title)) {
+    return "问卷标题不能包含路径分隔符或控制字符。";
+  }
+
+  const cards = [...questions.querySelectorAll(".question-card")];
+  if (cards.length === 0) {
+    return "问卷至少需要一道题。";
+  }
+  if (cards.length > MAX_QUESTIONS) {
+    return `每份问卷最多包含 ${MAX_QUESTIONS} 道题。`;
+  }
+
+  for (let index = 0; index < cards.length; index += 1) {
+    const position = index + 1;
+    const label = cards[index].querySelector(".question-label").value;
+    if (label.trim() === "") {
+      return `第 ${position} 道题的题目文字不能为空。`;
+    }
+    if (characterCount(label) > 1000) {
+      return `第 ${position} 道题的题目文字不能超过 1000 个字符。`;
+    }
+
+    const type = cards[index].querySelector(".question-type").value;
+    if (CHOICE_TYPES.has(type)) {
+      const options = cards[index]
+        .querySelector(".question-options")
+        .value.split("|")
+        .map((option) => option.trim());
+      if (options.some((option) => option === "")) {
+        return `第 ${position} 道题需要填写有效选项。`;
+      }
+      if (options.length > 50) {
+        return `第 ${position} 道题最多包含 50 个选项。`;
+      }
+      if (options.some((option) => characterCount(option) > 200)) {
+        return `第 ${position} 道题的每个选项不能超过 200 个字符。`;
+      }
+    }
+  }
+
+  return null;
+}
+
+function updateEditorModeUi(sourceTitle) {
+  const copying = editorMode === "copy";
+  editorHeading.textContent = copying ? "复制问卷" : "创建问卷";
+  saveButton.textContent = copying ? "保存副本" : "创建问卷";
+  cancelButton.hidden = !copying;
+  editorModeBanner.hidden = !copying;
+  editorModeBanner.textContent = copying
+    ? `正在以《${sourceTitle}》为模板复制：保存后将创建新的独立问卷，不会复制答卷。`
+    : "";
+}
+
+function clearCopyParameter() {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("copy")) {
+    url.searchParams.delete("copy");
+    window.history.replaceState(null, "", url);
+  }
+}
+
+function resetToCreateMode() {
+  editorMode = "create";
+  editorForm.reset();
+  questions.replaceChildren();
+  addQuestion();
+  updateEditorModeUi();
+  clearCopyParameter();
+}
+
+function applyCopyMode(survey) {
+  editorMode = "copy";
+  titleInput.value = survey.title;
+  questions.replaceChildren();
+  for (const question of survey.questions) {
+    addQuestion(question);
+  }
+  updateEditorModeUi(survey.title);
+  setStatus(editorStatus, "");
+}
+
+async function enterCopyMode(surveyId) {
+  setStatus(editorStatus, "正在载入来源问卷……");
+  try {
+    const response = await fetch(
+      `/api/admin/questionnaires/${encodeURIComponent(surveyId)}`,
+    );
+    if (response.status === 401) {
+      setAuthenticated(false);
+      setStatus(
+        loginStatus,
+        "登录状态不可用或已过期。本地开发请使用 HTTPS，然后重新登录。",
+        "error",
+      );
+      return;
+    }
+    if (response.status === 404) {
+      resetToCreateMode();
+      setStatus(editorStatus, "来源问卷不存在或不可读取。", "error");
+      return;
+    }
+    if (!response.ok) {
+      throw new Error(await responseError(response));
+    }
+    const result = await response.json();
+    if (
+      result?.survey === null ||
+      typeof result?.survey !== "object" ||
+      typeof result.survey.title !== "string" ||
+      !Array.isArray(result.survey.questions)
+    ) {
+      throw new Error("来源问卷数据无效。");
+    }
+    applyCopyMode(result.survey);
+  } catch (error) {
+    resetToCreateMode();
+    setStatus(editorStatus, error.message, "error");
+  }
 }
 
 function addSurveyRows(surveys) {
@@ -281,37 +429,53 @@ uploadForm.addEventListener("submit", async (event) => {
   }
 });
 
-manualForm.addEventListener("submit", async (event) => {
+editorForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const submitButton = manualForm.querySelector("button[type='submit']");
-  submitButton.disabled = true;
-  setStatus(manualStatus, "正在创建问卷……");
+
+  const validationError = validateEditor();
+  if (validationError !== null) {
+    setStatus(editorStatus, validationError, "error");
+    return;
+  }
+
+  const copying = editorMode === "copy";
+  saveButton.disabled = true;
+  setStatus(editorStatus, copying ? "正在保存副本……" : "正在创建问卷……");
   try {
     const response = await fetch("/api/admin/questionnaires", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(manualPayload()),
+      body: JSON.stringify(editorPayload()),
     });
     if (!response.ok) {
       throw new Error(await responseError(response));
     }
-    manualForm.reset();
-    questions.replaceChildren();
-    addQuestion();
-    setStatus(manualStatus, "问卷创建成功。", "success");
+    resetToCreateMode();
+    setStatus(
+      editorStatus,
+      copying ? "副本已保存为新的独立问卷。" : "问卷创建成功。",
+      "success",
+    );
     await loadSurveys();
   } catch (error) {
-    setStatus(manualStatus, error.message, "error");
+    setStatus(editorStatus, error.message, "error");
   } finally {
-    submitButton.disabled = false;
+    saveButton.disabled = false;
   }
 });
 
-document.querySelector("#add-question-button").addEventListener("click", addQuestion);
+cancelButton.addEventListener("click", () => {
+  resetToCreateMode();
+  setStatus(editorStatus, "已取消复制，已返回新建问卷。");
+});
+
+document.querySelector("#add-question-button").addEventListener("click", () => addQuestion());
 document.querySelector("#refresh-button").addEventListener("click", () => loadSurveys());
 loadMoreButton.addEventListener("click", () => loadSurveys({ append: true }));
 
 addQuestion();
+
+const requestedCopyId = new URLSearchParams(window.location.search).get("copy");
 
 try {
   const response = await fetch("/api/admin/session");
@@ -319,6 +483,9 @@ try {
   setAuthenticated(authenticated);
   if (authenticated) {
     await loadSurveys();
+    if (requestedCopyId !== null && requestedCopyId !== "") {
+      await enterCopyMode(requestedCopyId);
+    }
   }
 } catch {
   setAuthenticated(false);
