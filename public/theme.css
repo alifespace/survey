@@ -50,53 +50,56 @@
   --page-glow: rgb(88 166 255 / 10%);
 }
 
-.theme-picker {
+.theme-toggle {
   position: fixed;
   z-index: 20;
   top: 0.8rem;
   right: 0.8rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
   border: 1px solid var(--border-default);
-  border-radius: 0.65rem;
-  padding: 0.35rem 0.45rem 0.35rem 0.65rem;
+  border-radius: 999px;
+  padding: 0;
   color: var(--text-secondary);
   background: var(--surface-background);
   box-shadow: 0 6px 18px var(--shadow);
-  font-size: 0.78rem;
-  font-weight: 700;
+  cursor: pointer;
 }
 
-.theme-picker label {
-  display: inline;
-  color: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-}
-
-.theme-picker select {
-  width: auto;
-  min-width: 5.6rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 0.45rem;
-  padding: 0.3rem 1.6rem 0.3rem 0.45rem;
+.theme-toggle:hover {
+  border-color: var(--border-strong);
   color: var(--text-primary);
-  background-color: var(--surface-background);
-  font: inherit;
 }
 
-.theme-picker select:focus-visible {
+.theme-toggle:focus-visible {
   outline: 3px solid var(--focus-ring);
-  outline-offset: 1px;
+  outline-offset: 2px;
+}
+
+.theme-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.theme-icon::before {
+  content: "◐";
+}
+
+.theme-toggle[data-theme-preference="light"] .theme-icon::before {
+  content: "☀";
+}
+
+.theme-toggle[data-theme-preference="dark"] .theme-icon::before {
+  content: "☾";
 }
 
 @media (max-width: 560px) {
-  .theme-picker {
+  .theme-toggle {
     position: static;
-    width: max-content;
-    max-width: calc(100% - 2rem);
     margin: 0.75rem 1rem 0 auto;
-    box-shadow: none;
   }
 }

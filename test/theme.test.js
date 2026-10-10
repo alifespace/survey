@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   THEME_STORAGE_KEY,
   createThemeController,
+  nextThemePreference,
   normalizeThemePreference,
   resolveTheme,
 } from "../public/theme.js";
@@ -13,10 +14,14 @@ function fakeRoot() {
   return { dataset: {}, style: {} };
 }
 
-function fakeControl() {
+function fakeToggle() {
   const listeners = new Map();
   return {
-    value: "",
+    dataset: {},
+    attributes: new Map(),
+    setAttribute(name, value) {
+      this.attributes.set(name, value);
+    },
     addEventListener(type, listener) {
       listeners.set(type, listener);
     },
@@ -25,9 +30,8 @@ function fakeControl() {
         listeners.delete(type);
       }
     },
-    select(value) {
-      this.value = value;
-      listeners.get("change")?.({ currentTarget: this });
+    click() {
+      listeners.get("click")?.();
     },
   };
 }
@@ -63,26 +67,43 @@ test("normalizes theme preferences and resolves the system theme", () => {
   assert.equal(resolveTheme("light", true), "light");
 });
 
-test("restores a saved preference and persists control changes", () => {
+test("cycles preferences in light, system, dark order", () => {
+  assert.equal(nextThemePreference("light"), "system");
+  assert.equal(nextThemePreference("system"), "dark");
+  assert.equal(nextThemePreference("dark"), "light");
+  assert.equal(nextThemePreference("invalid"), "dark");
+});
+
+test("restores a saved preference and persists toggle clicks", () => {
   const values = new Map([[THEME_STORAGE_KEY, "dark"]]);
   const storage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
   };
   const root = fakeRoot();
-  const control = fakeControl();
+  const toggle = fakeToggle();
   const controller = createThemeController({
     root,
     storage,
     mediaQuery: fakeMediaQuery(false),
-    controls: [control],
+    toggles: [toggle],
   });
 
   assert.equal(root.dataset.theme, "dark");
-  assert.equal(control.value, "dark");
-  control.select("light");
+  assert.equal(toggle.dataset.themePreference, "dark");
+  assert.match(toggle.attributes.get("aria-label"), /深色主题/u);
+
+  toggle.click();
+  assert.equal(controller.preference, "light");
   assert.equal(root.dataset.theme, "light");
   assert.equal(values.get(THEME_STORAGE_KEY), "light");
+  assert.equal(toggle.dataset.themePreference, "light");
+  assert.match(toggle.attributes.get("aria-label"), /浅色主题/u);
+
+  toggle.click();
+  assert.equal(controller.preference, "system");
+  assert.match(toggle.attributes.get("aria-label"), /跟随系统主题/u);
+
   controller.destroy();
 });
 
@@ -145,9 +166,9 @@ test("loads theme initialization, styles, controls, and behavior on every page",
     assert.notEqual(styleIndex, -1, `${page} must load theme styles`);
     assert.ok(initIndex < styleIndex, `${page} must apply the theme before styles`);
     assert.match(html, /src="\/theme\.js"/u);
-    assert.match(html, /data-theme-select/u);
-    assert.match(html, /value="system">跟随系统/u);
-    assert.match(html, /value="light">浅色/u);
-    assert.match(html, /value="dark">深色/u);
+    assert.match(html, /data-theme-toggle/u);
+    assert.match(html, /class="theme-icon"/u);
+    assert.equal(html.includes("data-theme-select"), false);
+    assert.equal(html.includes("theme-picker"), false);
   }
 });

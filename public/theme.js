@@ -1,8 +1,20 @@
 export const THEME_STORAGE_KEY = "survey_theme_v1";
 export const THEME_PREFERENCES = Object.freeze(["system", "light", "dark"]);
+export const THEME_CYCLE_ORDER = Object.freeze(["light", "system", "dark"]);
+export const THEME_TOGGLE_LABELS = Object.freeze({
+  light: "浅色主题",
+  system: "跟随系统主题",
+  dark: "深色主题",
+});
 
 export function normalizeThemePreference(value) {
   return THEME_PREFERENCES.includes(value) ? value : "system";
+}
+
+export function nextThemePreference(value) {
+  const current = normalizeThemePreference(value);
+  const index = THEME_CYCLE_ORDER.indexOf(current);
+  return THEME_CYCLE_ORDER[(index + 1) % THEME_CYCLE_ORDER.length];
 }
 
 export function resolveTheme(preference, prefersDark) {
@@ -28,7 +40,7 @@ function savePreference(storage, preference) {
   }
 }
 
-export function createThemeController({ root, storage, mediaQuery, controls = [] }) {
+export function createThemeController({ root, storage, mediaQuery, toggles = [] }) {
   let preference = readPreference(storage);
 
   function applyTheme() {
@@ -36,8 +48,11 @@ export function createThemeController({ root, storage, mediaQuery, controls = []
     root.dataset.themePreference = preference;
     root.dataset.theme = theme;
     root.style.colorScheme = theme;
-    for (const control of controls) {
-      control.value = preference;
+    for (const toggle of toggles) {
+      toggle.dataset.themePreference = preference;
+      const label = `主题：${THEME_TOGGLE_LABELS[preference]}，点击切换`;
+      toggle.setAttribute("aria-label", label);
+      toggle.title = label;
     }
     return theme;
   }
@@ -48,15 +63,15 @@ export function createThemeController({ root, storage, mediaQuery, controls = []
     return applyTheme();
   }
 
-  const onControlChange = (event) => setPreference(event.currentTarget.value);
+  const onToggleClick = () => setPreference(nextThemePreference(preference));
   const onSystemThemeChange = () => {
     if (preference === "system") {
       applyTheme();
     }
   };
 
-  for (const control of controls) {
-    control.addEventListener("change", onControlChange);
+  for (const toggle of toggles) {
+    toggle.addEventListener("click", onToggleClick);
   }
   mediaQuery?.addEventListener?.("change", onSystemThemeChange);
   applyTheme();
@@ -67,8 +82,8 @@ export function createThemeController({ root, storage, mediaQuery, controls = []
     },
     setPreference,
     destroy() {
-      for (const control of controls) {
-        control.removeEventListener("change", onControlChange);
+      for (const toggle of toggles) {
+        toggle.removeEventListener("click", onToggleClick);
       }
       mediaQuery?.removeEventListener?.("change", onSystemThemeChange);
     },
@@ -86,7 +101,7 @@ export function initializeTheme(documentObject = document, windowObject = window
     root: documentObject.documentElement,
     storage,
     mediaQuery: windowObject.matchMedia?.("(prefers-color-scheme: dark)"),
-    controls: [...documentObject.querySelectorAll("[data-theme-select]")],
+    toggles: [...documentObject.querySelectorAll("[data-theme-toggle]")],
   });
 }
 
