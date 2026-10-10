@@ -38,13 +38,14 @@ test("create and copy share one editor form with a clear mode banner and cancel"
   assert.match(html, /id="editor-mode-banner"[^>]*hidden/u);
   assert.ok(js.includes('"复制问卷"'));
   assert.ok(js.includes('"保存副本"'));
-  assert.ok(js.includes("取消复制"));
+  assert.ok(js.includes("已取消"));
 });
 
 test("copy mode prefills from the admin questionnaire detail API", () => {
-  assert.match(js, /URLSearchParams\(window\.location\.search\)\.get\("copy"\)/u);
+  assert.match(js, /URLSearchParams\(window\.location\.search\)/u);
+  assert.ok(js.includes('get("copy")'));
   assert.ok(js.includes("/api/admin/questionnaires/"));
-  assert.ok(js.includes("applyCopyMode"));
+  assert.ok(js.includes("applyPrefilledMode"));
   assert.ok(js.includes("resetToCreateMode"));
 });
 
@@ -98,4 +99,14 @@ test("each questionnaire row offers view, copy, submissions, and delete actions"
   assert.ok(js.includes('"查看"'));
   assert.ok(js.includes('"复制"'));
   assert.match(js, /searchParams\.set\("copy"/u);
+});
+
+test("questionnaires without submissions can be edited in place from the list", () => {
+  assert.ok(js.includes("startEdit"));
+  assert.ok(js.includes("enterEditMode"));
+  assert.ok(js.includes('"编辑"'));
+  assert.match(js, /method: "PUT"/u);
+  assert.ok(js.includes('searchParams.set("edit"'));
+  assert.ok(js.includes("includeQuestionIds"));
+  assert.match(js, /QUESTIONNAIRE_HAS_SUBMISSIONS/u);
 });

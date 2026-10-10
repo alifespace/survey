@@ -92,3 +92,69 @@ export function serializeManualQuestionnaire(input) {
     sourceFilename: `${title}.csv`,
   };
 }
+
+function normalizeEditableQuestion(question, index) {
+  if (question === null || typeof question !== "object" || Array.isArray(question)) {
+    throw new ManualQuestionnaireError(
+      "INVALID_QUESTION",
+      `Question ${index + 1} must be an object`,
+    );
+  }
+
+  const { question_id: questionId, type, label, required, options } = question;
+  if (
+    (questionId !== undefined &&
+      questionId !== null &&
+      typeof questionId !== "string") ||
+    typeof type !== "string" ||
+    typeof label !== "string" ||
+    typeof required !== "boolean" ||
+    !Array.isArray(options) ||
+    options.some((option) => typeof option !== "string")
+  ) {
+    throw new ManualQuestionnaireError(
+      "INVALID_QUESTION",
+      `Question ${index + 1} has an invalid field type`,
+    );
+  }
+
+  if (options.some((option) => option.includes("|"))) {
+    throw new ManualQuestionnaireError(
+      "INVALID_QUESTION",
+      `Question ${index + 1} options must not contain the | separator`,
+    );
+  }
+
+  return {
+    question_id: typeof questionId === "string" ? questionId : "",
+    type,
+    label,
+    required,
+    options,
+  };
+}
+
+export function serializeEditableQuestionnaire(input) {
+  if (input === null || typeof input !== "object" || Array.isArray(input)) {
+    throw new ManualQuestionnaireError(
+      "INVALID_INPUT",
+      "Questionnaire must be an object",
+    );
+  }
+
+  const title = validateTitle(input.title);
+  if (!Array.isArray(input.questions)) {
+    throw new ManualQuestionnaireError(
+      "INVALID_QUESTIONS",
+      "questions must be an array",
+    );
+  }
+
+  const normalized = input.questions.map(normalizeEditableQuestion);
+  const parsed = parseQuestionnaireCsv(serializeQuestionnaireCsv(normalized));
+
+  return {
+    csv: serializeQuestionnaireCsv(parsed.questions),
+    title,
+  };
+}

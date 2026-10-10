@@ -1,8 +1,10 @@
 import {
   createQuestionnaire,
   getQuestionnaire,
+  hasSubmissions,
   listQuestionnaires,
   QuestionnaireRepositoryError,
+  updateQuestionnaire,
 } from "./questionnaire-repository.js";
 import {
   QuestionnaireCsvError,
@@ -10,13 +12,10 @@ import {
 } from "./questionnaire-csv.js";
 import {
   ManualQuestionnaireError,
+  serializeEditableQuestionnaire,
   serializeManualQuestionnaire,
 } from "./manual-questionnaire.js";
-import {
-  submissionListPrefix,
-  surveyDefinitionKey,
-  surveyMetadataKey,
-} from "./object-keys.js";
+import { surveyDefinitionKey, surveyMetadataKey } from "./object-keys.js";
 
 function jsonResponse(body, status, headers = {}) {
   return new Response(JSON.stringify(body), {
@@ -116,12 +115,17 @@ async function createFromRequest(request, bucket) {
   return jsonResponse({ survey }, 201);
 }
 
-async function listHasSubmissions(bucket, surveyId) {
-  const listed = await bucket.list({
-    prefix: submissionListPrefix(surveyId),
-    limit: 1,
-  });
-  return listed.objects.length > 0;
+async function readEditableQuestionnaire(request) {
+  let input;
+  try {
+    input = await request.json();
+  } catch {
+    throw new ManualQuestionnaireError(
+      "INVALID_JSON",
+      "Request body must be valid JSON",
+    );
+  }
+  return serializeEditableQuestionnaire(input);
 }
 
 async function deleteQuestionnaire(bucket, surveyId) {
@@ -130,7 +134,7 @@ async function deleteQuestionnaire(bucket, surveyId) {
     return jsonResponse({ error: "Questionnaire unavailable" }, 404);
   }
 
-  if (await listHasSubmissions(bucket, surveyId)) {
+  if (await hasSubmissions(bucket, surveyId)) {
     return jsonResponse(
       {
         error: "Questionnaire has submissions and cannot be deleted",
@@ -164,11 +168,58 @@ export async function handleAdminQuestionnaireDetailRequest(
     }
   }
 
+  if (request.method === "PUT") {
+    const contentType = (request.headers.get("Content-Type") ?? "").toLowerCase();
+    if (!contentType.startsWith("application/json")) {
+      return jsonResponse(
+        { error: "Content-Type must be application/json" },
+        415,
+      );
+    }
+    try {
+      const { csv, title } = await readEditableQuestionnaire(request);
+      const survey = await updateQuestionnaire(env.SURVEY_BUCKET, surveyId, {
+        csv,
+        title,
+      });
+      if (survey === null) {
+        return jsonResponse({ error: "Questionnaire unavailable" }, 404);
+      }
+      return jsonResponse({ survey }, 200);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        return jsonResponse({ error: "Questionnaire unavailable" }, 404);
+      }
+      if (
+        error instanceof QuestionnaireCsvError ||
+        error instanceof ManualQuestionnaireError
+      ) {
+        return clientError(error);
+      }
+      if (
+        error instanceof QuestionnaireRepositoryError &&
+        error.code === "QUESTIONNAIRE_HAS_SUBMISSIONS"
+      ) {
+        return jsonResponse(
+          {
+            error: "Questionnaire has submissions and cannot be edited",
+            code: error.code,
+          },
+          409,
+        );
+      }
+      if (error instanceof QuestionnaireRepositoryError) {
+        return jsonResponse({ error: "Questionnaire unavailable" }, 500);
+      }
+      throw error;
+    }
+  }
+
   if (request.method !== "GET") {
     return jsonResponse(
       { error: "Method not allowed" },
       405,
-      { Allow: "GET, DELETE" },
+      { Allow: "GET, PUT, DELETE" },
     );
   }
 
@@ -208,7 +259,7 @@ export async function handleAdminQuestionnairesRequest(request, env) {
       const surveys = await Promise.all(
         result.surveys.map(async (survey) => ({
           ...survey,
-          has_submissions: await listHasSubmissions(
+          has_submissions: await hasSubmissions(
             env.SURVEY_BUCKET,
             survey.survey_id,
           ),

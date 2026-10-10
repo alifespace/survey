@@ -1,4 +1,5 @@
 import {
+  submissionListPrefix,
   surveyDefinitionKey,
   surveyListPrefix,
   surveyMetadataKey,
@@ -177,6 +178,42 @@ export async function createQuestionnaire(
   });
   await putNewObject(bucket, metadataKey, JSON.stringify(metadata), {
     contentType: "application/json; charset=utf-8",
+  });
+
+  return metadata;
+}
+
+export async function hasSubmissions(bucket, surveyId) {
+  const listed = await bucket.list({
+    prefix: submissionListPrefix(surveyId),
+    limit: 1,
+  });
+  return listed.objects.length > 0;
+}
+
+export async function updateQuestionnaire(bucket, surveyId, { csv, title }) {
+  validateBucket(bucket);
+  const parsed = parseQuestionnaireCsv(csv);
+  const canonicalCsv = serializeQuestionnaireCsv(parsed.questions);
+
+  const existing = await getQuestionnaire(bucket, surveyId);
+  if (existing === null) {
+    return null;
+  }
+
+  if (await hasSubmissions(bucket, surveyId)) {
+    throw new QuestionnaireRepositoryError(
+      "QUESTIONNAIRE_HAS_SUBMISSIONS",
+      `Questionnaire has submissions: ${surveyId}`,
+    );
+  }
+
+  const metadata = { ...existing.metadata, title };
+  await bucket.put(surveyDefinitionKey(surveyId), canonicalCsv, {
+    httpMetadata: { contentType: "text/csv; charset=utf-8" },
+  });
+  await bucket.put(surveyMetadataKey(surveyId), JSON.stringify(metadata), {
+    httpMetadata: { contentType: "application/json; charset=utf-8" },
   });
 
   return metadata;

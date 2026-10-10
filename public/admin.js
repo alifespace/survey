@@ -61,6 +61,7 @@ const QUESTION_TYPE_NAMES = Object.freeze({
 
 let listCursor = null;
 let editorMode = "create";
+let activeEditorSurveyId = null;
 
 function setStatus(element, message, kind = "") {
   element.textContent = message;
@@ -156,6 +157,9 @@ function addQuestion(question = null, afterCard = null) {
     card.querySelector(".question-type").value = question.type;
     card.querySelector(".question-label").value = question.label;
     card.querySelector(".question-required").checked = question.required;
+    if (typeof question.question_id === "string" && question.question_id !== "") {
+      card.dataset.questionId = question.question_id;
+    }
   }
 
   if (afterCard !== null && afterCard.parentElement === questions) {
@@ -172,13 +176,13 @@ function addQuestion(question = null, afterCard = null) {
   card.querySelector(".question-label").focus();
 }
 
-function editorPayload() {
+function editorPayload({ includeQuestionIds = false } = {}) {
   return {
     title: titleInput.value,
     questions: [...questions.querySelectorAll(".question-card")].map((card) => {
       const type = card.querySelector(".question-type").value;
       const optionsValue = card.querySelector(".question-options").value;
-      return {
+      const question = {
         type,
         label: card.querySelector(".question-label").value,
         required: card.querySelector(".question-required").checked,
@@ -186,6 +190,10 @@ function editorPayload() {
           ? optionsValue.split("|").map((option) => option.trim())
           : [],
       };
+      if (includeQuestionIds && card.dataset.questionId !== undefined) {
+        question.question_id = card.dataset.questionId;
+      }
+      return question;
     }),
   };
 }
@@ -247,34 +255,55 @@ function validateEditor() {
 
 function updateEditorModeUi(sourceTitle) {
   const copying = editorMode === "copy";
-  editorHeading.textContent = copying ? "复制问卷" : "创建问卷";
-  saveButton.textContent = copying ? "保存副本" : "创建问卷";
-  cancelButton.hidden = !copying;
-  editorModeBanner.hidden = !copying;
-  editorModeBanner.textContent = copying
-    ? `正在以《${sourceTitle}》为模板复制：保存后将创建新的独立问卷，不会复制答卷。`
-    : "";
+  const editing = editorMode === "edit";
+  editorHeading.textContent = copying
+    ? "复制问卷"
+    : editing
+      ? "编辑问卷"
+      : "创建问卷";
+  saveButton.textContent = copying
+    ? "保存副本"
+    : editing
+      ? "保存修改"
+      : "创建问卷";
+  cancelButton.hidden = !(copying || editing);
+  editorModeBanner.hidden = !(copying || editing);
+  if (copying) {
+    editorModeBanner.textContent = `正在以《${sourceTitle}》为模板复制：保存后将创建新的独立问卷，不会复制答卷。`;
+  } else if (editing) {
+    editorModeBanner.textContent = `正在编辑《${sourceTitle}》：保存后将覆盖该问卷的定义（仅无答卷问卷可以保存）。`;
+  } else {
+    editorModeBanner.textContent = "";
+  }
 }
 
-function clearCopyParameter() {
+function clearEditorParams() {
   const url = new URL(window.location.href);
-  if (url.searchParams.has("copy")) {
-    url.searchParams.delete("copy");
+  let changed = false;
+  for (const parameter of ["copy", "edit"]) {
+    if (url.searchParams.has(parameter)) {
+      url.searchParams.delete(parameter);
+      changed = true;
+    }
+  }
+  if (changed) {
     window.history.replaceState(null, "", url);
   }
 }
 
 function resetToCreateMode() {
   editorMode = "create";
+  activeEditorSurveyId = null;
   editorForm.reset();
   questions.replaceChildren();
   addQuestion();
   updateEditorModeUi();
-  clearCopyParameter();
+  clearEditorParams();
 }
 
-function applyCopyMode(survey) {
-  editorMode = "copy";
+function applyPrefilledMode(mode, survey) {
+  editorMode = mode;
+  activeEditorSurveyId = mode === "edit" ? survey.survey_id : null;
   titleInput.value = survey.title;
   questions.replaceChildren();
   for (const question of survey.questions) {
@@ -284,8 +313,9 @@ function applyCopyMode(survey) {
   setStatus(editorStatus, "");
 }
 
-async function enterCopyMode(surveyId) {
-  setStatus(editorStatus, "正在载入来源问卷……");
+async function loadQuestionnaireIntoEditor(surveyId, mode) {
+  const loadingText = mode === "edit" ? "正在载入要编辑的问卷……" : "正在载入来源问卷……";
+  setStatus(editorStatus, loadingText);
   try {
     const response = await fetch(
       `/api/admin/questionnaires/${encodeURIComponent(surveyId)}`,
@@ -316,11 +346,19 @@ async function enterCopyMode(surveyId) {
     ) {
       throw new Error("来源问卷数据无效。");
     }
-    applyCopyMode(result.survey);
+    applyPrefilledMode(mode, result.survey);
   } catch (error) {
     resetToCreateMode();
     setStatus(editorStatus, error.message, "error");
   }
+}
+
+function enterCopyMode(surveyId) {
+  return loadQuestionnaireIntoEditor(surveyId, "copy");
+}
+
+function enterEditMode(surveyId) {
+  return loadQuestionnaireIntoEditor(surveyId, "edit");
 }
 
 function addSurveyRows(surveys) {
@@ -368,6 +406,20 @@ function addSurveyRows(surveys) {
       startCopy(survey);
     });
     actions.append(copyButton);
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "secondary compact";
+    editButton.textContent = "编辑";
+    if (survey.has_submissions) {
+      editButton.disabled = true;
+      editButton.title = "该问卷已有答卷，不能编辑。";
+    } else {
+      editButton.addEventListener("click", () => {
+        startEdit(survey);
+      });
+    }
+    actions.append(editButton);
 
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
@@ -481,6 +533,15 @@ function startCopy(survey) {
   url.searchParams.set("copy", survey.survey_id);
   window.history.replaceState(null, "", url);
   enterCopyMode(survey.survey_id).then(() => {
+    editorForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function startEdit(survey) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("edit", survey.survey_id);
+  window.history.replaceState(null, "", url);
+  enterEditMode(survey.survey_id).then(() => {
     editorForm.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
@@ -601,22 +662,48 @@ editorForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  const copying = editorMode === "copy";
+  const mode = editorMode;
   saveButton.disabled = true;
-  setStatus(editorStatus, copying ? "正在保存副本……" : "正在创建问卷……");
+  setStatus(
+    editorStatus,
+    mode === "edit"
+      ? "正在保存修改……"
+      : mode === "copy"
+        ? "正在保存副本……"
+        : "正在创建问卷……",
+  );
   try {
-    const response = await fetch("/api/admin/questionnaires", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editorPayload()),
-    });
+    const response = mode === "edit"
+      ? await fetch(
+        `/api/admin/questionnaires/${encodeURIComponent(activeEditorSurveyId)}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editorPayload({ includeQuestionIds: true })),
+        },
+      )
+      : await fetch("/api/admin/questionnaires", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editorPayload()),
+      });
     if (!response.ok) {
+      if (response.status === 409) {
+        const body = await response.json().catch(() => null);
+        if (body?.code === "QUESTIONNAIRE_HAS_SUBMISSIONS") {
+          throw new Error("该问卷已有答卷，不能编辑。");
+        }
+      }
       throw new Error(await responseError(response));
     }
     resetToCreateMode();
     setStatus(
       editorStatus,
-      copying ? "副本已保存为新的独立问卷。" : "问卷创建成功。",
+      mode === "edit"
+        ? "问卷修改已保存。"
+        : mode === "copy"
+          ? "副本已保存为新的独立问卷。"
+          : "问卷创建成功。",
       "success",
     );
     await loadSurveys();
@@ -629,7 +716,7 @@ editorForm.addEventListener("submit", async (event) => {
 
 cancelButton.addEventListener("click", () => {
   resetToCreateMode();
-  setStatus(editorStatus, "已取消复制，已返回新建问卷。");
+  setStatus(editorStatus, "已取消，已返回新建问卷。");
 });
 
 document.querySelector("#close-detail-button").addEventListener("click", () => {
@@ -642,7 +729,9 @@ loadMoreButton.addEventListener("click", () => loadSurveys({ append: true }));
 
 addQuestion();
 
-const requestedCopyId = new URLSearchParams(window.location.search).get("copy");
+const pageParams = new URLSearchParams(window.location.search);
+const requestedCopyId = pageParams.get("copy");
+const requestedEditId = pageParams.get("edit");
 
 try {
   const response = await fetch("/api/admin/session");
@@ -650,7 +739,9 @@ try {
   setAuthenticated(authenticated);
   if (authenticated) {
     await loadSurveys();
-    if (requestedCopyId !== null && requestedCopyId !== "") {
+    if (requestedEditId !== null && requestedEditId !== "") {
+      await enterEditMode(requestedEditId);
+    } else if (requestedCopyId !== null && requestedCopyId !== "") {
       await enterCopyMode(requestedCopyId);
     }
   }

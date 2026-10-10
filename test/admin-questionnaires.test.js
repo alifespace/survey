@@ -366,14 +366,142 @@ test("rejects unsupported methods on the questionnaire detail route", async () =
   const response = await worker.fetch(
     request(
       "/api/admin/questionnaires/123e4567-e89b-42d3-a456-426614174000",
-      { method: "PUT", headers },
+      { method: "PATCH", headers },
     ),
     { ...authEnv, SURVEY_BUCKET: bucket },
   );
 
   assert.equal(response.status, 405);
-  assert.equal(response.headers.get("Allow"), "GET, DELETE");
+  assert.equal(response.headers.get("Allow"), "GET, PUT, DELETE");
   assert.equal(bucket.calls.length, 0);
+});
+
+test("edits a questionnaire in place, keeping IDs and created_at", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const created = await createManualQuestionnaire(bucket, headers);
+  const metadataKey = `v1/surveys/${created.survey_id}/metadata.json`;
+  const definitionKey = `v1/surveys/${created.survey_id}/definition.csv`;
+
+  const response = await worker.fetch(
+    request(`/api/admin/questionnaires/${created.survey_id}`, {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Edited survey",
+        questions: [
+          {
+            question_id: "q1",
+            type: "single_choice",
+            label: "Edited question?",
+            required: false,
+            options: ["Yes", "No"],
+          },
+          {
+            type: "text",
+            label: "Brand new question",
+            required: true,
+            options: [],
+          },
+        ],
+      }),
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 200);
+  const { survey } = await response.json();
+  assert.equal(survey.title, "Edited survey");
+  assert.equal(survey.created_at, created.created_at);
+  assert.equal(survey.survey_id, created.survey_id);
+
+  const storedCsv = bucket.objects.get(definitionKey).value;
+  assert.deepEqual(parseQuestionnaireCsv(storedCsv).questions.map(
+    (question) => question.question_id,
+  ), ["q1", "q2"]);
+  const storedMetadata = JSON.parse(bucket.objects.get(metadataKey).value);
+  assert.equal(storedMetadata.title, "Edited survey");
+  assert.equal(storedMetadata.created_at, created.created_at);
+});
+
+test("refuses to edit a questionnaire that has submissions", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const created = await createManualQuestionnaire(bucket, headers);
+  const definitionKey = `v1/surveys/${created.survey_id}/definition.csv`;
+  const originalCsv = bucket.objects.get(definitionKey).value;
+  bucket.objects.set(
+    `v1/submissions/${created.survey_id}/2026-10-10T00:00:00.000_` +
+      "987e6543-e21b-42d3-b456-426614174999.json",
+    { value: "{}" },
+  );
+
+  const response = await worker.fetch(
+    request(`/api/admin/questionnaires/${created.survey_id}`, {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Should not save",
+        questions: [
+          { type: "text", label: "Nope", required: false, options: [] },
+        ],
+      }),
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 409);
+  assert.equal(
+    (await response.json()).code,
+    "QUESTIONNAIRE_HAS_SUBMISSIONS",
+  );
+  assert.equal(bucket.objects.get(definitionKey).value, originalCsv);
+});
+
+test("returns safe errors when editing missing or malformed questionnaires", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const body = JSON.stringify({
+    title: "Any",
+    questions: [{ type: "text", label: "Q", required: false, options: [] }],
+  });
+
+  const missing = await worker.fetch(
+    request(
+      "/api/admin/questionnaires/223e4567-e89b-42d3-a456-426614174000",
+      { method: "PUT", headers: { ...headers, "Content-Type": "application/json" }, body },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(missing.status, 404);
+
+  const malformed = await worker.fetch(
+    request("/api/admin/questionnaires/not-a-uuid", {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body,
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(malformed.status, 404);
+
+  const invalid = await worker.fetch(
+    request(
+      "/api/admin/questionnaires/223e4567-e89b-42d3-a456-426614174000",
+      {
+        method: "PUT",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Bad",
+          questions: [{ type: "date", label: "Q", required: false, options: [] }],
+        }),
+      },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(invalid.status, 400);
+
+  assert.equal(bucket.calls.filter(({ method }) => method === "put").length, 0);
 });
 
 test("rejects unauthenticated questionnaire deletion before touching R2", async () => {
