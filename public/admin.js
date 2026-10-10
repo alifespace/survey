@@ -317,17 +317,82 @@ function addSurveyRows(surveys) {
     const id = document.createElement("td");
     const created = document.createElement("td");
     const actions = document.createElement("td");
-    const submissionsLink = document.createElement("a");
     title.textContent = survey.title;
     id.textContent = survey.survey_id;
     id.className = "code";
     created.textContent = new Date(survey.created_at).toLocaleString("zh-CN");
-    submissionsLink.className = "button-link";
-    submissionsLink.href = `/admin-submissions.html?${new URLSearchParams({ survey_id: survey.survey_id })}`;
-    submissionsLink.textContent = "查看答卷";
-    actions.append(submissionsLink);
+    actions.className = "row-actions";
+
+    if (survey.has_submissions) {
+      const submissionsLink = document.createElement("a");
+      submissionsLink.className = "button-link";
+      submissionsLink.href = `/admin-submissions.html?${new URLSearchParams({ survey_id: survey.survey_id })}`;
+      submissionsLink.textContent = "查看答卷";
+      actions.append(submissionsLink);
+    } else {
+      const disabledSubmissions = document.createElement("span");
+      disabledSubmissions.className = "button-link disabled";
+      disabledSubmissions.textContent = "查看答卷";
+      disabledSubmissions.title = "该问卷暂无答卷。";
+      disabledSubmissions.setAttribute("aria-disabled", "true");
+      actions.append(disabledSubmissions);
+    }
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "secondary compact";
+    deleteButton.textContent = "删除问卷";
+    if (survey.has_submissions) {
+      deleteButton.disabled = true;
+      deleteButton.title = "该问卷已有答卷，不能删除。";
+    } else {
+      deleteButton.addEventListener("click", () => {
+        deleteSurvey(survey, deleteButton);
+      });
+    }
+    actions.append(deleteButton);
+
     row.append(title, id, created, actions);
     surveyList.append(row);
+  }
+}
+
+async function deleteSurvey(survey, button) {
+  const confirmed = window.confirm(
+    `确定删除问卷《${survey.title}》吗？删除后无法恢复。`,
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  button.disabled = true;
+  setStatus(listStatus, "正在删除问卷……");
+  try {
+    const response = await fetch(
+      `/api/admin/questionnaires/${encodeURIComponent(survey.survey_id)}`,
+      { method: "DELETE" },
+    );
+    if (response.status === 401) {
+      setAuthenticated(false);
+      setStatus(
+        loginStatus,
+        "登录状态不可用或已过期。本地开发请使用 HTTPS，然后重新登录。",
+        "error",
+      );
+      return;
+    }
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      if (body?.code === "QUESTIONNAIRE_HAS_SUBMISSIONS") {
+        throw new Error("该问卷已有答卷，不能删除。");
+      }
+      throw new Error(await responseError(response));
+    }
+    setStatus(listStatus, `问卷《${survey.title}》已删除。`, "success");
+    await loadSurveys();
+  } catch (error) {
+    setStatus(listStatus, error.message, "error");
+    button.disabled = false;
   }
 }
 

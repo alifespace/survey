@@ -70,3 +70,12 @@ test("client validation runs before submit and the server stays authoritative", 
   assert.ok(js.includes("validateEditor"));
   assert.match(js, /editorForm\.addEventListener\("submit"/u);
 });
+
+test("list rows enable delete only without submissions and enable view only with submissions", () => {
+  assert.ok(js.includes("has_submissions"));
+  assert.ok(js.includes("删除问卷"));
+  assert.ok(js.includes("查看答卷"));
+  assert.ok(js.includes("QUESTIONNAIRE_HAS_SUBMISSIONS"));
+  assert.ok(js.includes("window.confirm"));
+  assert.match(js, /method: "DELETE"/u);
+});

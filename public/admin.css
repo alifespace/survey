@@ -111,6 +111,19 @@ button.compact {
   gap: 0.5rem;
 }
 
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.button-link.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 .mode-banner {
   margin: 0.85rem 0 0;
   border: 1px solid var(--border-default);

@@ -49,6 +49,11 @@ class FakeR2Bucket {
     return { key };
   }
 
+  async delete(key) {
+    this.calls.push({ method: "delete", key });
+    this.objects.delete(key);
+  }
+
   async list(options = {}) {
     this.calls.push({ method: "list", options });
     const keys = [...this.objects.keys()]
@@ -138,7 +143,7 @@ test("creates a manual questionnaire as canonical CSV and lists its metadata", a
   );
   assert.equal(listResponse.status, 200);
   assert.deepEqual(await listResponse.json(), {
-    surveys: [survey],
+    surveys: [{ ...survey, has_submissions: false }],
     cursor: null,
   });
 });
@@ -361,12 +366,144 @@ test("rejects unsupported methods on the questionnaire detail route", async () =
   const response = await worker.fetch(
     request(
       "/api/admin/questionnaires/123e4567-e89b-42d3-a456-426614174000",
-      { method: "DELETE", headers },
+      { method: "PUT", headers },
     ),
     { ...authEnv, SURVEY_BUCKET: bucket },
   );
 
   assert.equal(response.status, 405);
-  assert.equal(response.headers.get("Allow"), "GET");
+  assert.equal(response.headers.get("Allow"), "GET, DELETE");
   assert.equal(bucket.calls.length, 0);
+});
+
+test("rejects unauthenticated questionnaire deletion before touching R2", async () => {
+  const bucket = new FakeR2Bucket();
+  const response = await worker.fetch(
+    request(
+      "/api/admin/questionnaires/123e4567-e89b-42d3-a456-426614174000",
+      { method: "DELETE" },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 401);
+  assert.equal(bucket.calls.length, 0);
+});
+
+test("deletes a questionnaire without submissions and keeps other data intact", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const created = await createManualQuestionnaire(bucket, headers);
+  const keep = await createManualQuestionnaire(bucket, headers, {
+    title: "Keep me",
+    questions: [
+      { type: "text", label: "Other", required: false, options: [] },
+    ],
+  });
+
+  const response = await worker.fetch(
+    request(`/api/admin/questionnaires/${created.survey_id}`, {
+      method: "DELETE",
+      headers,
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 204);
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${created.survey_id}/definition.csv`),
+    false,
+  );
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${created.survey_id}/metadata.json`),
+    false,
+  );
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${keep.survey_id}/definition.csv`),
+    true,
+  );
+});
+
+test("refuses to delete a questionnaire that has submissions", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const created = await createManualQuestionnaire(bucket, headers);
+  bucket.objects.set(
+    `v1/submissions/${created.survey_id}/2026-10-10T00:00:00.000_` +
+      "987e6543-e21b-42d3-b456-426614174999.json",
+    { value: "{}" },
+  );
+
+  const response = await worker.fetch(
+    request(`/api/admin/questionnaires/${created.survey_id}`, {
+      method: "DELETE",
+      headers,
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 409);
+  assert.equal(
+    (await response.json()).code,
+    "QUESTIONNAIRE_HAS_SUBMISSIONS",
+  );
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${created.survey_id}/definition.csv`),
+    true,
+  );
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${created.survey_id}/metadata.json`),
+    true,
+  );
+});
+
+test("reports has_submissions in the administrator questionnaire list", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+  const created = await createManualQuestionnaire(bucket, headers);
+  bucket.objects.set(
+    `v1/submissions/${created.survey_id}/2026-10-10T00:00:00.000_` +
+      "987e6543-e21b-42d3-b456-426614174999.json",
+    { value: "{}" },
+  );
+
+  const response = await worker.fetch(
+    request("/api/admin/questionnaires", { headers }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 200);
+  const { surveys } = await response.json();
+  assert.equal(surveys.length, 1);
+  assert.equal(surveys[0].has_submissions, true);
+});
+
+test("returns safe errors when deleting missing or malformed questionnaires", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authorizedHeaders();
+
+  const missing = await worker.fetch(
+    request(
+      "/api/admin/questionnaires/223e4567-e89b-42d3-a456-426614174000",
+      { method: "DELETE", headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(missing.status, 404);
+  assert.deepEqual(await missing.json(), {
+    error: "Questionnaire unavailable",
+  });
+
+  const malformed = await worker.fetch(
+    request("/api/admin/questionnaires/not-a-uuid", {
+      method: "DELETE",
+      headers,
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(malformed.status, 404);
+  assert.deepEqual(await malformed.json(), {
+    error: "Questionnaire unavailable",
+  });
+  assert.equal(bucket.calls.filter(({ method }) => method === "delete").length, 0);
 });

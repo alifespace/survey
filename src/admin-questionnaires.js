@@ -12,6 +12,11 @@ import {
   ManualQuestionnaireError,
   serializeManualQuestionnaire,
 } from "./manual-questionnaire.js";
+import {
+  submissionListPrefix,
+  surveyDefinitionKey,
+  surveyMetadataKey,
+} from "./object-keys.js";
 
 function jsonResponse(body, status, headers = {}) {
   return new Response(JSON.stringify(body), {
@@ -111,16 +116,59 @@ async function createFromRequest(request, bucket) {
   return jsonResponse({ survey }, 201);
 }
 
+async function listHasSubmissions(bucket, surveyId) {
+  const listed = await bucket.list({
+    prefix: submissionListPrefix(surveyId),
+    limit: 1,
+  });
+  return listed.objects.length > 0;
+}
+
+async function deleteQuestionnaire(bucket, surveyId) {
+  const questionnaire = await getQuestionnaire(bucket, surveyId);
+  if (questionnaire === null) {
+    return jsonResponse({ error: "Questionnaire unavailable" }, 404);
+  }
+
+  if (await listHasSubmissions(bucket, surveyId)) {
+    return jsonResponse(
+      {
+        error: "Questionnaire has submissions and cannot be deleted",
+        code: "QUESTIONNAIRE_HAS_SUBMISSIONS",
+      },
+      409,
+    );
+  }
+
+  await bucket.delete(surveyDefinitionKey(surveyId));
+  await bucket.delete(surveyMetadataKey(surveyId));
+  return new Response(null, { status: 204 });
+}
+
 export async function handleAdminQuestionnaireDetailRequest(
   request,
   env,
   surveyId,
 ) {
+  if (request.method === "DELETE") {
+    try {
+      return await deleteQuestionnaire(env.SURVEY_BUCKET, surveyId);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        return jsonResponse({ error: "Questionnaire unavailable" }, 404);
+      }
+      if (error instanceof QuestionnaireRepositoryError) {
+        return jsonResponse({ error: "Questionnaire unavailable" }, 500);
+      }
+      throw error;
+    }
+  }
+
   if (request.method !== "GET") {
     return jsonResponse(
       { error: "Method not allowed" },
       405,
-      { Allow: "GET" },
+      { Allow: "GET, DELETE" },
     );
   }
 
@@ -157,7 +205,16 @@ export async function handleAdminQuestionnairesRequest(request, env) {
         env.SURVEY_BUCKET,
         parseListOptions(new URL(request.url)),
       );
-      return jsonResponse(result, 200);
+      const surveys = await Promise.all(
+        result.surveys.map(async (survey) => ({
+          ...survey,
+          has_submissions: await listHasSubmissions(
+            env.SURVEY_BUCKET,
+            survey.survey_id,
+          ),
+        })),
+      );
+      return jsonResponse({ surveys, cursor: result.cursor }, 200);
     } catch (error) {
       if (
         error instanceof QuestionnaireRepositoryError &&
