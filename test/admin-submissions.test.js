@@ -95,6 +95,11 @@ class FakeR2Bucket {
     throw new Error("Unexpected write");
   }
 
+  async delete(key) {
+    this.calls.push({ method: "delete", key });
+    this.objects.delete(key);
+  }
+
   async list(options = {}) {
     this.calls.push({ method: "list", options });
     const keys = [...this.objects.keys()]
@@ -242,4 +247,130 @@ test("rejects unauthenticated export and malformed stored submissions safely", a
   );
   assert.equal(malformed.status, 500);
   assert.deepEqual(await malformed.json(), { error: "Submissions unavailable" });
+});
+
+test("rejects unauthenticated submission deletion before reading R2", async () => {
+  const bucket = new FakeR2Bucket();
+  bucket.calls = [];
+  const query = new URLSearchParams({ submitted_at: submittedTimes[0] });
+  const response = await worker.fetch(
+    request(
+      `/api/admin/questionnaires/${surveyId}/submissions/${submissionIds[0]}?${query}`,
+      { method: "DELETE" },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(response.status, 401);
+  assert.equal(bucket.calls.length, 0);
+});
+
+test("deletes one submission and leaves the others untouched", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authHeaders();
+  const query = new URLSearchParams({ submitted_at: submittedTimes[0] });
+  const response = await worker.fetch(
+    request(
+      `/api/admin/questionnaires/${surveyId}/submissions/${submissionIds[0]}?${query}`,
+      { method: "DELETE", headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+
+  assert.equal(response.status, 204);
+  assert.equal(
+    bucket.objects.has(
+      `v1/submissions/${surveyId}/${submittedTimes[0]}_${submissionIds[0]}.json`,
+    ),
+    false,
+  );
+  assert.equal(
+    bucket.objects.has(
+      `v1/submissions/${surveyId}/${submittedTimes[1]}_${submissionIds[1]}.json`,
+    ),
+    true,
+  );
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${surveyId}/definition.csv`),
+    true,
+  );
+});
+
+test("returns safe errors for missing and malformed submission deletion", async () => {
+  const bucket = new FakeR2Bucket({ includeSubmissions: false });
+  const headers = await authHeaders();
+
+  const query = new URLSearchParams({ submitted_at: submittedTimes[0] });
+  const missing = await worker.fetch(
+    request(
+      `/api/admin/questionnaires/${surveyId}/submissions/${submissionIds[0]}?${query}`,
+      { method: "DELETE", headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(missing.status, 404);
+
+  const withoutTimestamp = await worker.fetch(
+    request(
+      `/api/admin/questionnaires/${surveyId}/submissions/${submissionIds[0]}`,
+      { method: "DELETE", headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(withoutTimestamp.status, 404);
+
+  const badTimestampQuery = new URLSearchParams({ submitted_at: "not-a-timestamp" });
+  const malformed = await worker.fetch(
+    request(
+      `/api/admin/questionnaires/${surveyId}/submissions/${submissionIds[0]}?${badTimestampQuery}`,
+      { method: "DELETE", headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(malformed.status, 404);
+
+  const badIdQuery = new URLSearchParams({ submitted_at: submittedTimes[0] });
+  const badId = await worker.fetch(
+    request(
+      `/api/admin/questionnaires/${surveyId}/submissions/not-a-uuid?${badIdQuery}`,
+      { method: "DELETE", headers },
+    ),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(badId.status, 404);
+
+  assert.equal(bucket.calls.filter(({ method }) => method === "delete").length, 0);
+});
+
+test("questionnaire becomes deletable again after all submissions are removed", async () => {
+  const bucket = new FakeR2Bucket();
+  const headers = await authHeaders();
+
+  for (let index = 0; index < submissionIds.length; index += 1) {
+    const query = new URLSearchParams({ submitted_at: submittedTimes[index] });
+    const response = await worker.fetch(
+      request(
+        `/api/admin/questionnaires/${surveyId}/submissions/${submissionIds[index]}?${query}`,
+        { method: "DELETE", headers },
+      ),
+      { ...authEnv, SURVEY_BUCKET: bucket },
+    );
+    assert.equal(response.status, 204);
+  }
+
+  const deleteResponse = await worker.fetch(
+    request(`/api/admin/questionnaires/${surveyId}`, {
+      method: "DELETE",
+      headers,
+    }),
+    { ...authEnv, SURVEY_BUCKET: bucket },
+  );
+  assert.equal(deleteResponse.status, 204);
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${surveyId}/definition.csv`),
+    false,
+  );
+  assert.equal(
+    bucket.objects.has(`v1/surveys/${surveyId}/metadata.json`),
+    false,
+  );
 });

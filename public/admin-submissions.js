@@ -34,17 +34,57 @@ function addSubmissionRows(submissions) {
     const submitted = document.createElement("td");
     const actions = document.createElement("td");
     const viewButton = document.createElement("button");
+    const deleteButton = document.createElement("button");
     id.className = "code";
     id.textContent = submission.submission_id;
     email.textContent = submission.email;
     submitted.textContent = new Date(submission.submitted_at).toLocaleString("zh-CN");
+    actions.className = "row-actions";
     viewButton.type = "button";
     viewButton.className = "secondary compact";
     viewButton.textContent = "查看";
     viewButton.addEventListener("click", () => loadSubmission(submission));
-    actions.append(viewButton);
+    deleteButton.type = "button";
+    deleteButton.className = "danger compact";
+    deleteButton.textContent = "删除";
+    deleteButton.addEventListener("click", () => {
+      deleteSubmission(submission, row, deleteButton);
+    });
+    actions.append(viewButton, deleteButton);
     row.append(id, email, submitted, actions);
     submissionList.append(row);
+  }
+}
+
+async function deleteSubmission(submission, row, button) {
+  const confirmed = window.confirm(
+    `确定删除来自 ${submission.email} 的这份答卷吗？删除后无法恢复。`,
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  button.disabled = true;
+  listStatus.className = "status";
+  listStatus.textContent = "正在删除答卷……";
+  try {
+    const query = new URLSearchParams({ submitted_at: submission.submitted_at });
+    const response = await fetch(
+      `/api/admin/questionnaires/${encodeURIComponent(surveyId)}/submissions/${encodeURIComponent(submission.submission_id)}?${query}`,
+      { method: "DELETE" },
+    );
+    if (!response.ok) {
+      throw new Error(await apiError(response, "无法删除答卷。"));
+    }
+    row.remove();
+    detailPanel.hidden = true;
+    const count = submissionList.children.length;
+    submissionTable.hidden = count === 0;
+    listStatus.textContent = `已删除 1 份答卷，当前剩余 ${count} 份。`;
+  } catch (error) {
+    listStatus.className = "status error";
+    listStatus.textContent = error.message;
+    button.disabled = false;
   }
 }
 

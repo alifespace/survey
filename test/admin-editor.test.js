@@ -10,6 +10,10 @@ const js = await readFile(
   new URL("../public/admin.js", import.meta.url),
   "utf8",
 );
+const submissionsJs = await readFile(
+  new URL("../public/admin-submissions.js", import.meta.url),
+  "utf8",
+);
 
 test("the editor form never asks for or submits question IDs", () => {
   assert.equal(html.includes("question-id"), false);
@@ -78,4 +82,10 @@ test("list rows enable delete only without submissions and enable view only with
   assert.ok(js.includes("QUESTIONNAIRE_HAS_SUBMISSIONS"));
   assert.ok(js.includes("window.confirm"));
   assert.match(js, /method: "DELETE"/u);
+});
+
+test("the submission list provides a confirmed delete action per row", () => {
+  assert.match(submissionsJs, /deleteSubmission/u);
+  assert.ok(submissionsJs.includes("window.confirm"));
+  assert.match(submissionsJs, /method: "DELETE"/u);
 });

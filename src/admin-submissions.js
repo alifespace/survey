@@ -11,6 +11,7 @@ import {
   exportSubmissionsCsv,
   SubmissionExportError,
 } from "./submission-export.js";
+import { submissionKey } from "./object-keys.js";
 
 function jsonResponse(body, status, headers = {}) {
   return new Response(JSON.stringify(body), {
@@ -80,16 +81,57 @@ export async function handleAdminSubmissionListRequest(request, env, surveyId) {
   }
 }
 
+async function deleteSubmissionObject(env, surveyId, submissionId, submittedAt) {
+  const questionnaire = await questionnaireOrNull(env, surveyId);
+  if (questionnaire === null) {
+    return notFoundResponse();
+  }
+
+  const key = submissionKey(surveyId, submittedAt, submissionId);
+  const stored = await env.SURVEY_BUCKET.head(key);
+  if (stored === null) {
+    return notFoundResponse();
+  }
+
+  await env.SURVEY_BUCKET.delete(key);
+  return new Response(null, { status: 204 });
+}
+
 export async function handleAdminSubmissionDetailRequest(
   request,
   env,
   surveyId,
   submissionId,
 ) {
-  if (request.method !== "GET") {
-    return jsonResponse({ error: "Method not allowed" }, 405, { Allow: "GET" });
-  }
   const submittedAt = new URL(request.url).searchParams.get("submitted_at");
+
+  if (request.method === "DELETE") {
+    if (submittedAt === null) {
+      return notFoundResponse();
+    }
+    try {
+      return await deleteSubmissionObject(env, surveyId, submissionId, submittedAt);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        return notFoundResponse();
+      }
+      if (
+        error instanceof StoredSubmissionError ||
+        error instanceof QuestionnaireRepositoryError
+      ) {
+        return jsonResponse({ error: "Submission unavailable" }, 500);
+      }
+      throw error;
+    }
+  }
+
+  if (request.method !== "GET") {
+    return jsonResponse(
+      { error: "Method not allowed" },
+      405,
+      { Allow: "GET, DELETE" },
+    );
+  }
   if (submittedAt === null) {
     return notFoundResponse();
   }
