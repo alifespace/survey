@@ -4,10 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>答卷管理</title>
+    <script src="/theme-init.js"></script>
+    <link rel="stylesheet" href="/theme.css">
     <link rel="stylesheet" href="/admin.css">
+    <script type="module" src="/theme.js"></script>
     <script type="module" src="/admin-submissions.js"></script>
   </head>
   <body>
+    <div class="theme-picker">
+      <label for="theme-select">主题</label>
+      <select id="theme-select" data-theme-select>
+        <option value="system">跟随系统</option>
+        <option value="light">浅色</option>
+        <option value="dark">深色</option>
+      </select>
+    </div>
     <main class="shell">
       <header class="page-header">
         <div>

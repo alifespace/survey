@@ -1,6 +1,6 @@
 :root {
-  color: #172338;
-  background: #f3f6fa;
+  color: var(--text-primary);
+  background: var(--page-background);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
 }
@@ -13,8 +13,8 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgb(31 111 235 / 12%), transparent 34rem),
-    #f3f6fa;
+    radial-gradient(circle at top left, var(--page-glow), transparent 34rem),
+    var(--page-background);
 }
 
 button,
@@ -29,13 +29,97 @@ textarea {
   padding: 7vh 0 3rem;
 }
 
+.home-shell {
+  display: grid;
+  grid-template-columns: minmax(28rem, 0.82fr) minmax(32rem, 1.18fr);
+  min-height: 100vh;
+}
+
+.home-primary {
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border-default);
+  padding: clamp(3.5rem, 5vw, 5rem) clamp(2rem, 5vw, 5rem);
+  background: var(--page-background);
+}
+
+.home-primary-inner {
+  width: min(100%, 34rem);
+  margin: 0 auto;
+}
+
+.home-page .intro h1 {
+  font-size: clamp(2.25rem, 3.6vw, 3.35rem);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.home-page .entry-panel {
+  border-radius: 0.85rem;
+  padding: 1.5rem;
+  box-shadow: 0 12px 34px var(--shadow);
+}
+
+.home-aside {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(4rem, 9vw, 9rem);
+  background: var(--surface-background);
+}
+
+.home-aside-content {
+  position: relative;
+  width: min(100%, 44rem);
+}
+
+.home-aside-mark {
+  position: absolute;
+  top: -4rem;
+  left: -2.2rem;
+  color: var(--border-default);
+  font-family: Georgia, serif;
+  font-size: clamp(7rem, 12vw, 11rem);
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+.home-aside-kicker {
+  position: relative;
+  margin-bottom: 1.15rem;
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.home-aside h2 {
+  position: relative;
+  max-width: 18ch;
+  margin-bottom: 1.25rem;
+  font-size: clamp(2rem, 4vw, 3.75rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+.home-aside-content > p:last-child {
+  position: relative;
+  max-width: 36rem;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
 .intro {
   margin-bottom: 1.5rem;
 }
 
 .eyebrow {
   margin: 0 0 0.5rem;
-  color: #1769e0;
+  color: var(--primary);
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.09em;
@@ -55,16 +139,16 @@ h1 {
 }
 
 .intro > p:last-child {
-  color: #5a6c84;
+  color: var(--text-muted);
   font-size: 1.05rem;
 }
 
 .panel {
-  border: 1px solid #d9e1ec;
+  border: 1px solid var(--border-default);
   border-radius: 1rem;
   padding: clamp(1.25rem, 4vw, 2rem);
-  background: #fff;
-  box-shadow: 0 16px 42px rgb(23 35 56 / 8%);
+  background: var(--surface-background);
+  box-shadow: 0 16px 42px var(--shadow);
 }
 
 h2 {
@@ -78,17 +162,17 @@ form {
 
 label,
 legend {
-  color: #304158;
+  color: var(--text-label);
   font-weight: 700;
 }
 
 input[type="email"] {
   width: 100%;
-  border: 1px solid #b9c7d9;
+  border: 1px solid var(--border-strong);
   border-radius: 0.6rem;
   padding: 0.8rem 0.9rem;
-  color: #172338;
-  background: #fff;
+  color: var(--text-primary);
+  background: var(--surface-background);
 }
 
 input[type="text"],
@@ -96,11 +180,11 @@ input[type="email"],
 input[type="number"],
 textarea {
   width: 100%;
-  border: 1px solid #b9c7d9;
+  border: 1px solid var(--border-strong);
   border-radius: 0.6rem;
   padding: 0.8rem 0.9rem;
-  color: #172338;
-  background: #fff;
+  color: var(--text-primary);
+  background: var(--surface-background);
 }
 
 textarea {
@@ -110,7 +194,7 @@ textarea {
 input:focus,
 button:focus-visible,
 .survey-option:has(input:focus-visible) {
-  outline: 3px solid rgb(23 105 224 / 25%);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -134,7 +218,7 @@ legend {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  border: 1px solid #d2dce8;
+  border: 1px solid var(--border-default);
   border-radius: 0.7rem;
   padding: 0.9rem;
   cursor: pointer;
@@ -142,13 +226,13 @@ legend {
 
 .survey-option:hover,
 .survey-option:has(input:checked) {
-  border-color: #1769e0;
-  background: #f4f8ff;
+  border-color: var(--primary);
+  background: var(--surface-selected);
 }
 
 .survey-option input {
   margin-top: 0.2rem;
-  accent-color: #1769e0;
+  accent-color: var(--primary);
 }
 
 .survey-title {
@@ -156,17 +240,17 @@ legend {
 }
 
 button {
-  border: 1px solid #1769e0;
+  border: 1px solid var(--primary);
   border-radius: 0.6rem;
   padding: 0.8rem 1rem;
-  color: #fff;
-  background: #1769e0;
+  color: var(--surface-background);
+  background: var(--primary);
   cursor: pointer;
   font-weight: 750;
 }
 
 button:hover:not(:disabled) {
-  background: #0f58c4;
+  background: var(--primary-hover);
 }
 
 button:disabled {
@@ -175,32 +259,32 @@ button:disabled {
 }
 
 button.secondary {
-  border-color: #c4cfdd;
-  color: #304158;
-  background: #fff;
+  border-color: var(--border-default);
+  color: var(--text-label);
+  background: var(--surface-background);
 }
 
 .status,
 .field-error {
   min-height: 1.3rem;
   margin: 0;
-  color: #607086;
+  color: var(--text-muted);
 }
 
 .status.error,
 .field-error {
-  color: #b42318;
+  color: var(--danger);
 }
 
 .status.success {
-  color: #18754a;
+  color: var(--success);
 }
 
 .admin-link,
 .back-link {
   display: inline-block;
   margin-top: 1.2rem;
-  color: #405570;
+  color: var(--text-secondary);
 }
 
 .selection-details {
@@ -211,7 +295,7 @@ button.secondary {
 }
 
 .selection-details dt {
-  color: #607086;
+  color: var(--text-muted);
   font-weight: 700;
 }
 
@@ -223,8 +307,8 @@ button.secondary {
 .respondent {
   border-radius: 0.6rem;
   padding: 0.8rem 1rem;
-  color: #405570;
-  background: #f3f6fa;
+  color: var(--text-secondary);
+  background: var(--surface-subtle);
 }
 
 .question-list {
@@ -235,7 +319,7 @@ button.secondary {
 .response-question {
   display: grid;
   gap: 0.55rem;
-  border: 1px solid #d9e1ec;
+  border: 1px solid var(--border-default);
   border-radius: 0.75rem;
   padding: 1rem;
 }
@@ -250,8 +334,8 @@ button.secondary {
 .required-mark {
   border-radius: 999px;
   padding: 0.15rem 0.45rem;
-  color: #a32920;
-  background: #fff0ee;
+  color: var(--required);
+  background: var(--required-surface);
   font-size: 0.75rem;
   font-weight: 750;
 }
@@ -265,7 +349,7 @@ button.secondary {
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
-  border: 1px solid #d9e1ec;
+  border: 1px solid var(--border-default);
   border-radius: 0.55rem;
   padding: 0.7rem 0.8rem;
   cursor: pointer;
@@ -274,21 +358,21 @@ button.secondary {
 
 .choice-option:hover,
 .choice-option:has(input:checked) {
-  border-color: #1769e0;
-  background: #f4f8ff;
+  border-color: var(--primary);
+  background: var(--surface-selected);
 }
 
 .choice-option input {
   margin-top: 0.2rem;
-  accent-color: #1769e0;
+  accent-color: var(--primary);
 }
 
 .success-view {
-  border: 1px solid #a8d8c0;
+  border: 1px solid var(--success-border);
   border-radius: 0.75rem;
   padding: 1rem;
-  color: #155f3d;
-  background: #effaf4;
+  color: var(--success);
+  background: var(--success-surface);
 }
 
 .success-view h2 {
@@ -302,4 +386,43 @@ button.secondary {
 
 [hidden] {
   display: none !important;
+}
+
+@media (max-width: 900px) {
+  .home-shell {
+    display: block;
+    min-height: auto;
+  }
+
+  .home-primary {
+    min-height: calc(100vh - 4.5rem);
+    border-right: 0;
+    padding: clamp(2.5rem, 8vw, 5rem) max(1rem, calc((100vw - 42rem) / 2));
+  }
+
+  .home-primary-inner {
+    width: 100%;
+  }
+
+  .home-aside {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-primary {
+    align-items: flex-start;
+    min-height: auto;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+  }
+
+  .home-page .intro h1 {
+    font-size: clamp(2rem, 11vw, 2.8rem);
+  }
+
+  .home-page .entry-panel {
+    border-radius: 0.8rem;
+    box-shadow: 0 8px 24px var(--shadow);
+  }
 }

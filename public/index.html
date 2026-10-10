@@ -4,45 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>选择调查问卷</title>
+    <script src="/theme-init.js"></script>
+    <link rel="stylesheet" href="/theme.css">
     <link rel="stylesheet" href="/customer.css">
+    <script type="module" src="/theme.js"></script>
     <script type="module" src="/customer.js"></script>
   </head>
-  <body>
-    <main class="shell">
-      <section class="intro">
-        <p class="eyebrow">Cloudflare 调查</p>
-        <h1>选择一份调查问卷</h1>
-        <p>输入你的 Email，然后选择要填写的问卷。</p>
+  <body class="home-page">
+    <div class="theme-picker">
+      <label for="theme-select">主题</label>
+      <select id="theme-select" data-theme-select>
+        <option value="system">跟随系统</option>
+        <option value="light">浅色</option>
+        <option value="dark">深色</option>
+      </select>
+    </div>
+    <main class="home-shell">
+      <section class="home-primary" aria-labelledby="home-heading">
+        <div class="home-primary-inner">
+          <section class="intro">
+            <p class="eyebrow">Cloudflare 调查</p>
+            <h1 id="home-heading">选择一份调查问卷</h1>
+            <p>输入你的 Email，然后选择要填写的问卷。</p>
+          </section>
+
+          <section class="panel entry-panel" aria-labelledby="entry-heading">
+            <h2 id="entry-heading">开始填写</h2>
+            <form id="entry-form" novalidate>
+              <label for="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                maxlength="254"
+                autocomplete="email"
+                inputmode="email"
+                placeholder="name@example.com"
+                required
+              >
+              <p id="email-error" class="field-error" aria-live="polite"></p>
+
+              <fieldset id="survey-fieldset" hidden>
+                <legend>可用问卷</legend>
+                <div id="survey-list" class="survey-list"></div>
+              </fieldset>
+
+              <p id="list-status" class="status" role="status" aria-live="polite">正在加载问卷……</p>
+              <button id="retry-button" class="secondary" type="button" hidden>重新加载</button>
+              <button id="continue-button" type="submit" disabled>继续</button>
+            </form>
+          </section>
+
+          <a class="admin-link" href="/admin.html">管理员登录</a>
+        </div>
       </section>
 
-      <section class="panel" aria-labelledby="entry-heading">
-        <h2 id="entry-heading">开始填写</h2>
-        <form id="entry-form" novalidate>
-          <label for="email">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            maxlength="254"
-            autocomplete="email"
-            inputmode="email"
-            placeholder="name@example.com"
-            required
-          >
-          <p id="email-error" class="field-error" aria-live="polite"></p>
-
-          <fieldset id="survey-fieldset" hidden>
-            <legend>可用问卷</legend>
-            <div id="survey-list" class="survey-list"></div>
-          </fieldset>
-
-          <p id="list-status" class="status" role="status" aria-live="polite">正在加载问卷……</p>
-          <button id="retry-button" class="secondary" type="button" hidden>重新加载</button>
-          <button id="continue-button" type="submit" disabled>继续</button>
-        </form>
-      </section>
-
-      <a class="admin-link" href="/admin.html">管理员登录</a>
+      <aside class="home-aside" aria-labelledby="home-aside-heading">
+        <div class="home-aside-content">
+          <span class="home-aside-mark" aria-hidden="true">“</span>
+          <p class="home-aside-kicker">清晰反馈，从这里开始</p>
+          <h2 id="home-aside-heading">用更少的步骤，分享更有价值的意见。</h2>
+          <p>选择适合你的问卷，专注完成每一道题，提交前始终由你确认。</p>
+        </div>
+      </aside>
     </main>
   </body>
 </html>

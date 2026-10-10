@@ -1,0 +1,102 @@
+:root {
+  color-scheme: light;
+  --page-background: #f3f6fa;
+  --surface-background: #ffffff;
+  --surface-subtle: #f3f6fa;
+  --surface-selected: #f4f8ff;
+  --text-primary: #172338;
+  --text-secondary: #405570;
+  --text-muted: #607086;
+  --text-label: #304158;
+  --border-default: #d9e1ec;
+  --border-strong: #b9c7d9;
+  --primary: #1769e0;
+  --primary-hover: #0f58c4;
+  --focus-ring: rgb(23 105 224 / 28%);
+  --danger: #b42318;
+  --danger-border: #d73737;
+  --success: #18754a;
+  --success-surface: #effaf4;
+  --success-border: #a8d8c0;
+  --required: #a32920;
+  --required-surface: #fff0ee;
+  --shadow: rgb(23 35 56 / 8%);
+  --page-glow: rgb(31 111 235 / 12%);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page-background: #0d1117;
+  --surface-background: #161b22;
+  --surface-subtle: #202630;
+  --surface-selected: #162844;
+  --text-primary: #f0f4f8;
+  --text-secondary: #c5d0dc;
+  --text-muted: #9cabbc;
+  --text-label: #d7e0ea;
+  --border-default: #303946;
+  --border-strong: #4b5868;
+  --primary: #58a6ff;
+  --primary-hover: #79b8ff;
+  --focus-ring: rgb(88 166 255 / 38%);
+  --danger: #ff8d85;
+  --danger-border: #d85b55;
+  --success: #68d391;
+  --success-surface: #14291f;
+  --success-border: #2d6848;
+  --required: #ffaaa4;
+  --required-surface: #3a1d1d;
+  --shadow: rgb(0 0 0 / 28%);
+  --page-glow: rgb(88 166 255 / 10%);
+}
+
+.theme-picker {
+  position: fixed;
+  z-index: 20;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.65rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.65rem;
+  color: var(--text-secondary);
+  background: var(--surface-background);
+  box-shadow: 0 6px 18px var(--shadow);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.theme-picker label {
+  display: inline;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.theme-picker select {
+  width: auto;
+  min-width: 5.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.45rem;
+  padding: 0.3rem 1.6rem 0.3rem 0.45rem;
+  color: var(--text-primary);
+  background-color: var(--surface-background);
+  font: inherit;
+}
+
+.theme-picker select:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+@media (max-width: 560px) {
+  .theme-picker {
+    position: static;
+    width: max-content;
+    max-width: calc(100% - 2rem);
+    margin: 0.75rem 1rem 0 auto;
+    box-shadow: none;
+  }
+}

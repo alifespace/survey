@@ -1,6 +1,6 @@
 :root {
-  color: #1d2838;
-  background: #f2f5f8;
+  color: var(--text-primary);
+  background: var(--page-background);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
 }
@@ -11,6 +11,7 @@
 
 body {
   margin: 0;
+  background: var(--page-background);
 }
 
 button,
@@ -21,17 +22,17 @@ textarea {
 }
 
 button {
-  border: 1px solid #1769e0;
+  border: 1px solid var(--primary);
   border-radius: 0.55rem;
   padding: 0.7rem 1rem;
-  color: #fff;
-  background: #1769e0;
+  color: var(--surface-background);
+  background: var(--primary);
   cursor: pointer;
   font-weight: 650;
 }
 
 button:hover {
-  background: #0e57c4;
+  background: var(--primary-hover);
 }
 
 button:disabled {
@@ -40,19 +41,19 @@ button:disabled {
 }
 
 button.secondary {
-  border-color: #cad3df;
-  color: #26354a;
-  background: #fff;
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+  background: var(--surface-background);
 }
 
 button.secondary:hover {
-  background: #f2f5f8;
+  background: var(--surface-subtle);
 }
 
 button.danger {
-  border-color: #d73737;
-  color: #b42318;
-  background: #fff;
+  border-color: var(--danger-border);
+  color: var(--danger);
+  background: var(--surface-background);
 }
 
 button.compact {
@@ -62,11 +63,11 @@ button.compact {
 
 .button-link {
   display: inline-block;
-  border: 1px solid #cad3df;
+  border: 1px solid var(--border-default);
   border-radius: 0.5rem;
   padding: 0.45rem 0.65rem;
-  color: #26354a;
-  background: #fff;
+  color: var(--text-secondary);
+  background: var(--surface-background);
   font-size: 0.85rem;
   font-weight: 650;
   text-decoration: none;
@@ -74,7 +75,7 @@ button.compact {
 }
 
 .button-link:hover {
-  background: #f2f5f8;
+  background: var(--surface-subtle);
 }
 
 .shell {
@@ -84,11 +85,11 @@ button.compact {
 }
 
 .panel {
-  border: 1px solid #dce3ec;
+  border: 1px solid var(--border-default);
   border-radius: 0.85rem;
   padding: 1.4rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgb(24 41 69 / 6%);
+  background: var(--surface-background);
+  box-shadow: 0 8px 24px var(--shadow);
 }
 
 .narrow {
@@ -136,7 +137,7 @@ h2 {
 
 .eyebrow {
   margin-bottom: 0.35rem;
-  color: #1769e0;
+  color: var(--primary);
   font-size: 0.78rem;
   font-weight: 750;
   letter-spacing: 0.08em;
@@ -145,7 +146,7 @@ h2 {
 
 .subtle,
 .hint {
-  color: #607086;
+  color: var(--text-muted);
 }
 
 .hint {
@@ -161,7 +162,7 @@ form {
 label {
   display: grid;
   gap: 0.4rem;
-  color: #34445a;
+  color: var(--text-label);
   font-size: 0.9rem;
   font-weight: 650;
 }
@@ -170,18 +171,18 @@ input,
 select,
 textarea {
   width: 100%;
-  border: 1px solid #bdc9d8;
+  border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
   padding: 0.65rem 0.75rem;
-  color: #172338;
-  background: #fff;
+  color: var(--text-primary);
+  background: var(--surface-background);
 }
 
 input:focus,
 select:focus,
 textarea:focus,
 button:focus-visible {
-  outline: 3px solid rgb(23 105 224 / 25%);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 1px;
 }
 
@@ -193,7 +194,7 @@ button:focus-visible {
 .question-card {
   position: relative;
   margin: 0;
-  border: 1px solid #dce3ec;
+  border: 1px solid var(--border-default);
   border-radius: 0.7rem;
   padding: 1rem;
 }
@@ -236,15 +237,15 @@ button:focus-visible {
 .status {
   min-height: 1.4rem;
   margin: 0.85rem 0 0;
-  color: #52647a;
+  color: var(--text-muted);
 }
 
 .status.error {
-  color: #b42318;
+  color: var(--danger);
 }
 
 .status.success {
-  color: #18754a;
+  color: var(--success);
 }
 
 .table-wrap {
@@ -258,14 +259,14 @@ table {
 
 th,
 td {
-  border-bottom: 1px solid #e4e9f0;
+  border-bottom: 1px solid var(--border-default);
   padding: 0.8rem 0.6rem;
   text-align: left;
   vertical-align: top;
 }
 
 th {
-  color: #52647a;
+  color: var(--text-muted);
   font-size: 0.82rem;
   text-transform: uppercase;
 }
@@ -289,19 +290,19 @@ td.code {
 .detail-list dt,
 .detail-list dd {
   margin: 0;
-  border-bottom: 1px solid #e4e9f0;
+  border-bottom: 1px solid var(--border-default);
   padding: 0.75rem;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
 .detail-list dt {
-  color: #52647a;
+  color: var(--text-muted);
   font-weight: 700;
 }
 
 .detail-list dd.empty {
-  color: #7c8898;
+  color: var(--text-muted);
   font-style: italic;
 }
 
