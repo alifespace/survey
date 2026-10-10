@@ -48,6 +48,7 @@ test("the question editor keeps add, remove, reorder, type, label, required, and
   for (const marker of [
     "move-up",
     "move-down",
+    "add-after",
     "remove",
     "question-type",
     "question-label",
@@ -56,6 +57,13 @@ test("the question editor keeps add, remove, reorder, type, label, required, and
   ]) {
     assert.ok(html.includes(marker), `missing ${marker}`);
   }
+});
+
+test("adding a question happens from the question card, not the panel heading", () => {
+  assert.equal(html.includes('id="add-question-button"'), false);
+  assert.equal(js.includes("#add-question-button"), false);
+  assert.ok(js.includes('querySelector(".add-after")'));
+  assert.match(js, /addQuestion\(null, card\)/u);
 });
 
 test("client validation runs before submit and the server stays authoritative", () => {

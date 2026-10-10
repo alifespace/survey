@@ -109,7 +109,7 @@ function updateOptions(card) {
   }
 }
 
-function addQuestion(question = null) {
+function addQuestion(question = null, afterCard = null) {
   if (questions.children.length >= MAX_QUESTIONS) {
     setStatus(editorStatus, `每份问卷最多包含 ${MAX_QUESTIONS} 道题。`, "error");
     return;
@@ -131,6 +131,9 @@ function addQuestion(question = null) {
       updateQuestionControls();
     }
   });
+  card.querySelector(".add-after").addEventListener("click", () => {
+    addQuestion(null, card);
+  });
   card.querySelector(".remove").addEventListener("click", () => {
     card.remove();
     updateQuestionControls();
@@ -142,12 +145,18 @@ function addQuestion(question = null) {
     card.querySelector(".question-required").checked = question.required;
   }
 
-  questions.append(card);
+  if (afterCard !== null && afterCard.parentElement === questions) {
+    afterCard.after(card);
+  } else {
+    questions.append(card);
+  }
+
   updateOptions(card);
   if (question !== null && CHOICE_TYPES.has(question.type)) {
     card.querySelector(".question-options").value = question.options.join("|");
   }
   updateQuestionControls();
+  card.querySelector(".question-label").focus();
 }
 
 function editorPayload() {
@@ -469,7 +478,6 @@ cancelButton.addEventListener("click", () => {
   setStatus(editorStatus, "已取消复制，已返回新建问卷。");
 });
 
-document.querySelector("#add-question-button").addEventListener("click", () => addQuestion());
 document.querySelector("#refresh-button").addEventListener("click", () => loadSurveys());
 loadMoreButton.addEventListener("click", () => loadSurveys({ append: true }));
 

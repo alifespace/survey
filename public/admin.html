@@ -57,11 +57,10 @@
             <div class="section-heading">
               <div>
                 <h2 id="editor-heading">创建问卷</h2>
-                <p class="hint">按显示顺序添加题目，题目 ID 由系统自动生成。每份问卷最多 200 道题。</p>
+                <p class="hint">在题目卡片上点击“添加题目”即可在该题后插入新题；题目 ID 由系统自动生成。每份问卷最多 200 道题。</p>
               </div>
               <div class="section-actions">
                 <button id="cancel-editor-button" class="secondary" type="button" hidden>取消</button>
-                <button id="add-question-button" class="secondary" type="button">添加题目</button>
               </div>
             </div>
             <p id="editor-mode-banner" class="mode-banner" role="status" hidden></p>
@@ -105,6 +104,7 @@
         <div class="question-actions">
           <button class="move-up secondary compact" type="button" aria-label="上移题目">上移</button>
           <button class="move-down secondary compact" type="button" aria-label="下移题目">下移</button>
+          <button class="add-after secondary compact" type="button" aria-label="在此题目后添加新题目">添加题目</button>
           <button class="remove danger compact" type="button">删除</button>
         </div>
         <div class="question-grid">
