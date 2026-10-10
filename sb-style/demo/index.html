@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="OrbitDB 是一个用于构建实时产品的统一数据平台演示。">
+  <title>OrbitDB — 从第一行代码到稳定运行</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header" id="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="#top" aria-label="OrbitDB 首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>orbitdb</span></a>
+      <nav class="desktop-nav" aria-label="主导航">
+        <a href="#platform">产品</a><a href="#workflow">解决方案</a><a href="#developers">开发者</a><a href="#pricing">价格</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn theme-toggle" type="button" aria-label="切换主题" title="切换主题"><span aria-hidden="true">◐</span></button>
+        <a class="btn btn-primary nav-cta" href="dashboard.html">进入 Dashboard</a>
+        <button class="icon-btn menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="打开菜单"><span></span><span></span></button>
+      </div>
+    </div>
+    <nav class="mobile-menu" id="mobile-menu" aria-label="移动导航" hidden>
+      <a href="#platform">产品</a><a href="#workflow">解决方案</a><a href="#developers">开发者</a><a href="#pricing">价格</a><a href="dashboard.html">进入 Dashboard</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-copy reveal">
+        <div class="eyebrow"><span class="status-dot"></span> Edge Runtime 已在全部区域上线 <span aria-hidden="true">→</span></div>
+        <h1>今天完成接入，<br><span>增长后无需重写。</span></h1>
+        <p>OrbitDB 把数据库、身份验证和实时事件放进一个工作区，让产品团队从原型平滑走向生产。</p>
+        <div class="hero-actions"><a class="btn btn-primary btn-lg" href="dashboard.html">打开 Dashboard <span>→</span></a><a class="btn btn-secondary btn-lg" href="#workflow">查看产品演示 <span>↘</span></a></div>
+        <p class="microcopy">无需信用卡 · 2 分钟完成接入</p>
+      </div>
+
+      <div class="container console-shell reveal" aria-label="OrbitDB 产品界面演示">
+        <div class="window-bar"><div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="window-title"><span class="live-dot"></span> orbit-production</div><div class="window-meta">SIN · Healthy</div></div>
+        <div class="console-body">
+          <aside class="console-sidebar"><span class="side-label">Workspace</span><button class="active">▦ &nbsp; Table editor</button><button>⌁ &nbsp; API explorer</button><button>◉ &nbsp; Authentication</button><button>⌁ &nbsp; Realtime</button><span class="side-label lower">Project</span><button>⚙ &nbsp; Settings</button></aside>
+          <div class="data-view">
+            <div class="data-toolbar"><div><b>customers</b><span> public</span></div><div class="toolbar-actions"><button>Filter</button><button>Sort</button><button class="mini-primary">＋ Insert row</button></div></div>
+            <div class="table-wrap"><table><thead><tr><th><span class="key">⌘</span> id</th><th>name</th><th>plan</th><th>status</th><th>mrr</th></tr></thead><tbody>
+              <tr><td>usr_8f2a</td><td><span class="avatar violet">AL</span> Arc Labs</td><td>Scale</td><td><span class="pill active-pill">● Active</span></td><td>$12,480</td></tr>
+              <tr><td>usr_3c91</td><td><span class="avatar blue">NS</span> Northstar</td><td>Pro</td><td><span class="pill active-pill">● Active</span></td><td>$4,200</td></tr>
+              <tr><td>usr_7e44</td><td><span class="avatar amber">FM</span> Forma</td><td>Starter</td><td><span class="pill trial-pill">● Trial</span></td><td>$680</td></tr>
+              <tr><td>usr_1b08</td><td><span class="avatar teal">KI</span> Kinetic</td><td>Pro</td><td><span class="pill active-pill">● Active</span></td><td>$3,600</td></tr>
+            </tbody></table></div>
+            <div class="data-status"><span>4 rows</span><span><i class="live-dot"></i> Realtime connected</span><span>Latency 24ms</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof-strip" aria-label="平台特点"><div class="container proof-grid"><div><strong>14</strong><span>全球边缘区域</span></div><div><strong>99.99%</strong><span>平台可用性目标</span></div><div><strong>&lt; 50ms</strong><span>亚太读取延迟演示</span></div><div><strong>SQL</strong><span>开放标准，无锁定</span></div></div><p class="demo-note">以上数字仅为界面演示数据，不代表真实服务承诺。</p></section>
+
+    <section class="section platform" id="platform">
+      <div class="container">
+        <div class="section-heading reveal"><span class="kicker">一个平台，完整上下文</span><h2>把分散的后端能力，<br>变成一条清晰的工作流。</h2><p>每个模块共享同一套数据与权限模型。少做胶水工作，把时间留给真正影响用户的功能。</p></div>
+        <div class="capability-layout reveal">
+          <div class="capability-tabs" role="tablist" aria-label="产品能力">
+            <button role="tab" aria-selected="true" data-panel="database"><span class="cap-icon">▦</span><span><b>关系型数据库</b><small>熟悉的 SQL，全托管运行</small></span><em>01</em></button>
+            <button role="tab" aria-selected="false" data-panel="auth"><span class="cap-icon">◎</span><span><b>身份与权限</b><small>从登录到行级访问控制</small></span><em>02</em></button>
+            <button role="tab" aria-selected="false" data-panel="realtime"><span class="cap-icon">⌁</span><span><b>实时事件</b><small>订阅每一次重要变化</small></span><em>03</em></button>
+            <button role="tab" aria-selected="false" data-panel="functions"><span class="cap-icon">⌘</span><span><b>边缘函数</b><small>在离用户最近的地方运行</small></span><em>04</em></button>
+          </div>
+          <div class="capability-demo" id="capability-panel" role="tabpanel" tabindex="0">
+            <div class="demo-top"><span>SQL editor</span><span class="query-time">Query completed in 18ms</span></div>
+            <pre><code><span class="code-muted">-- 查看近 30 天增长最快的账户</span>
+<span class="code-blue">select</span> company, plan,
+  <span class="code-blue">sum</span>(events) <span class="code-blue">as</span> usage
+<span class="code-blue">from</span> customer_activity
+<span class="code-blue">where</span> created_at &gt; now() - <span class="code-green">'30 days'</span>
+<span class="code-blue">group by</span> company, plan
+<span class="code-blue">order by</span> usage <span class="code-blue">desc</span>;</code></pre>
+            <div class="result-head"><span>Results</span><span>3 rows</span></div>
+            <div class="bar-list"><div><span>Arc Labs</span><i style="--w:88%"></i><b>42.8k</b></div><div><span>Northstar</span><i style="--w:61%"></i><b>29.4k</b></div><div><span>Kinetic</span><i style="--w:42%"></i><b>20.1k</b></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section workflow" id="workflow">
+      <div class="container"><div class="section-heading compact reveal"><span class="kicker">从用户动作到可验证结果</span><h2>一次操作，整个系统同步响应。</h2></div>
+        <div class="flow-grid reveal">
+          <article><span class="step">01 / USER ACTION</span><div class="flow-icon">＋</div><h3>创建协作空间</h3><p>客户端提交一条标准请求，不需要维护额外的服务层。</p><code>spaces.create({ name })</code></article>
+          <article><span class="step">02 / SYSTEM EVENT</span><div class="pulse-ring"><i></i></div><h3>策略即时校验</h3><p>权限、数据写入和事件广播在同一个事务上下文中完成。</p><span class="success-line">✓ Policy passed · 24ms</span></article>
+          <article><span class="step">03 / VERIFIED RESULT</span><div class="mini-people"><i>JL</i><i>MK</i><i>＋3</i></div><h3>所有成员实时看见</h3><p>订阅者收到精确变更，而不是重新拉取整页数据。</p><span class="success-line">● 5 clients synchronized</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section developer" id="developers">
+      <div class="container dev-grid">
+        <div class="dev-copy reveal"><span class="kicker">为开发速度而设计</span><h2>六行代码，接入你的第一个实时功能。</h2><p>使用熟悉的 JavaScript SDK。自动生成类型，开发和生产环境保持一致。</p><ol><li><span>1</span><div><b>安装客户端</b><small>通过 npm、pnpm 或 CDN 接入</small></div></li><li><span>2</span><div><b>连接项目</b><small>复制项目 URL 与公开密钥</small></div></li><li><span>3</span><div><b>订阅数据</b><small>用一个回调响应数据库变化</small></div></li></ol></div>
+        <div class="code-card reveal"><div class="code-tabs"><button class="active">JavaScript</button><button>React</button><button>Swift</button><button class="copy-code" aria-label="复制代码">复制</button></div><pre><code id="code-sample"><span class="code-blue">import</span> { createClient } <span class="code-blue">from</span> <span class="code-green">'@orbit/sdk'</span>
+
+<span class="code-blue">const</span> orbit = createClient(
+  <span class="code-green">'https://demo.orbit.dev'</span>,
+  process.env.ORBIT_PUBLIC_KEY
+)
+
+orbit.channel(<span class="code-green">'spaces'</span>)
+  .on(<span class="code-green">'change'</span>, console.log)
+  .subscribe()</code></pre><div class="code-footer"><span><i class="live-dot"></i> Connected</span><span>TypeScript types included</span></div></div>
+      </div>
+    </section>
+
+    <section class="section starters" id="pricing"><div class="container"><div class="section-heading row reveal"><div><span class="kicker">从一个可靠的起点开始</span><h2>选择你的产品路径。</h2></div><a href="#start">浏览全部模板 →</a></div><div class="starter-grid reveal">
+      <article><div class="template-art dashboard-art"><span></span><span></span><span></span></div><div class="card-body"><span class="tag">SaaS</span><h3>多租户工作台</h3><p>身份验证、团队空间与行级权限已配置。</p><small>Next.js · TypeScript</small><a href="#start">使用此模板 <span>→</span></a></div></article>
+      <article><div class="template-art feed-art"><i></i><i></i><i></i></div><div class="card-body"><span class="tag">REALTIME</span><h3>协作动态流</h3><p>在线状态、消息订阅与乐观更新开箱即用。</p><small>React · Edge Functions</small><a href="#start">使用此模板 <span>→</span></a></div></article>
+      <article><div class="template-art api-art"><code>POST /v1/events<br><b>201 Created</b></code></div><div class="card-body"><span class="tag">API</span><h3>事件接收服务</h3><p>校验、存储并查询来自多个来源的事件。</p><small>Hono · PostgreSQL</small><a href="#start">使用此模板 <span>→</span></a></div></article>
+    </div></div></section>
+
+    <section class="section final-cta" id="start"><div class="container reveal"><div class="orbital-mark" aria-hidden="true"><i></i><i></i><span></span></div><h2>下一次构建，<br>从清晰的基础开始。</h2><p>创建免费的演示项目，在几分钟内体验数据库、权限与实时事件如何协同工作。</p><div class="hero-actions"><a class="btn btn-primary btn-lg" href="dashboard.html">进入产品控制台 <span>→</span></a><a class="btn btn-secondary btn-lg" href="#developers">阅读快速开始</a></div></div></section>
+  </main>
+
+  <footer><div class="container footer-top"><a class="brand" href="#top"><span class="brand-mark"><i></i><i></i><i></i></span><span>orbitdb</span></a><p>为可靠产品而建的开放数据平台。</p><div class="footer-links"><div><b>产品</b><a href="#platform">数据库</a><a href="#platform">身份验证</a><a href="#workflow">实时事件</a></div><div><b>资源</b><a href="#developers">文档</a><a href="#developers">快速开始</a><a href="#pricing">模板</a></div><div><b>公司</b><a href="#top">关于</a><a href="#top">博客</a><a href="#top">联系</a></div></div></div><div class="container footer-bottom"><span>© 2026 OrbitDB demo</span><span><i class="live-dot"></i> All systems operational</span><span>仅用于设计演示</span></div></footer>
+  <div class="toast" role="status" aria-live="polite">代码已复制</div>
+  <script src="script.js"></script>
+</body>
+</html>
